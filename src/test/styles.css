@@ -1,0 +1,191 @@
+body {
+    font-family: Garamond, monospace;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+}
+
+.main-heading {
+    padding: 0;
+    margin: 0;
+    height: 10vh;
+    font-size: 20px;
+    text-align: center;
+}
+
+h2 {
+    text-align: center;
+}
+
+p {
+    text-align: center;
+    font-size: 16px;
+    height: 5vh;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    display: flex;
+    height: calc(85vh - 5vh - 20px);
+    gap: 10px;
+    padding: 10px;
+}
+
+.panel {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.input-panel, .output-panel {
+    width: 20%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.input-panel input {
+    width: 95%;
+    padding: 5px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* From Uiverse.io by cssbuttons-io */
+.input-panel button {
+    width: 25%;
+    padding: 5px;
+    margin-top: 5px;
+    border-radius: 45px;
+    align-self: center;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    font-weight: 500;
+    color: #000;
+    background-color: #fff;
+    border: none;
+    border-radius: 45px;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease 0s;
+    cursor: pointer;
+    outline: none;
+}
+
+#sendBtn:active, #deployBtn:active {
+  transform: translateY(2px) !important;
+}
+
+#sendBtn:hover {
+  background-color: #23c483;
+  box-shadow: 0px 15px 20px rgba(46, 229, 157, 0.4);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+#deployBtn:hover {
+  background-color: #2383c4;
+  box-shadow: 0px 15px 20px rgba(46, 157, 229, 0.4);
+  color: #fff;
+  transform: translateY(-3px);
+}
+
+#chooseFileBtn:hover {
+  background-color: #7D23C4;
+  box-shadow: 0px 15px 20px rgba(136, 61, 229, 0.4);
+  color: #fff;
+  transform: translateY(-3px);
+}
+
+.output-panel {
+    width: 20%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto; /* Add this line */
+    max-height: 100%; /* Add this line */
+}
+
+.graph-panel {
+    flex-grow: 1;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+#graphCanvas {
+    width: 100%;
+    height: 100%;
+}
+
+.output-panel ul {
+    list-style: none;
+    padding: 0;
+}
+
+.output-panel ul li {
+    background: #e0e0e0;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+
+.file-selection {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#fileName {
+    width: 100%;
+    font-size: 14px;
+    color: #555;
+    width: 95%;
+    padding: 5px;
+    margin-top: 5px;
+    border-radius: 5px;
+    
+}
+
+/* From Uiverse.io by satyamchaudharydev */
+.loader {
+  display: block;
+  --height-of-loader: 5px;
+  --loader-color: #0071e2;
+  width: 130px;
+  height: var(--height-of-loader);
+  border-radius: 30px;
+  background-color: rgba(0,0,0,0.2);
+  position: absolute;
+}
+
+.loader::before {
+  content: "";
+  position: absolute;
+  background: var(--loader-color);
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 100%;
+  border-radius: 30px;
+  animation: moving 1s ease-in-out infinite;
+  ;
+}
+
+@keyframes moving {
+  50% {
+    width: 100%;
+  }
+
+  100% {
+    width: 0;
+    right: 0;
+    left: unset;
+  }
+}
