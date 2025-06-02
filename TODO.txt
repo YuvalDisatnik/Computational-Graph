@@ -1,0 +1,11 @@
+TODO List:
+
+ - Seperate index.html to iframes (page 2)  - Yuval
+ - Implement form.html (page 2)             - Omri
+ - Implement graph.html (page 2)            - Yuval
+ - Implement TopicDisplayer (page 3)        - Omri
+ - Implement ConfLoader (page 3)            - Yuval
+ - Implement HtmlLoader (page 3)            - Omri
+ - Implement HtmlGraphWriter (page 4)
+ - Final finishes
+
