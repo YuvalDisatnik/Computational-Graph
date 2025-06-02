@@ -1,6 +1,5 @@
 TODO List:
 
- - Seperate index.html to iframes (page 2)  - Yuval
  - Implement form.html (page 2)             - Omri
  - Implement graph.html (page 2)            - Yuval
  - Implement TopicDisplayer (page 3)        - Omri start with this
@@ -9,3 +8,11 @@ TODO List:
  - Implement HtmlGraphWriter (page 4)
  - Final finishes
 
+
+Completed & Status
+
+- Seperate index.html to iframes (page 2)
+    - Fix some UI stuff:
+        . Graph frame right corners not rounded (in graph.html)
+        . results list element width not right
+        . iFrames' height to cover all scrreen
