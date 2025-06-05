@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="temp-page">
+    <div class="results-panel">
+      <h3>Graph Results</h3>
+      <div class="results-content">
+        <!-- Loading State -->
+        <div class="loading-state">
+          <div class="loader"></div>
+          <p class="loading-message">No results to present</p>
+        </div>
+        <!-- Results Content (initially hidden) -->
+        <div class="results-container hidden">
+          <!-- Topics Section -->
+          <div class="section-title">Topics</div>
+          <div class="topics-results">
+            <!-- Will be populated dynamically -->
+          </div>
+
+          <!-- Final Result Section -->
+          <div class="section-title">Final Result</div>
+          <div class="final-result">
+            <!-- Will be populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Notify parent frame that we're ready to receive data
+      window.parent.postMessage({ type: "resultsFrameReady" }, "*");
+
+      function createTopicItem(topic) {
+        const topicItem = document.createElement("div");
+        topicItem.className = "topic-item";
+
+        const title = document.createElement("h4");
+        title.textContent = `Topic: ${topic.label}`;
+
+        const dataDiv = document.createElement("div");
+        dataDiv.className = "topic-data";
+        dataDiv.innerHTML = `Value: ${topic.value}`;
+
+        topicItem.appendChild(title);
+        topicItem.appendChild(dataDiv);
+
+        return topicItem;
+      }
+
+      function createResultItem(resultValue = 5.5) {
+        // Default placeholder value
+        const resultItem = document.createElement("div");
+        resultItem.className = "result-item";
+
+        const dataDiv = document.createElement("div");
+        dataDiv.className = "result-data";
+        dataDiv.innerHTML = `Final Value: ${resultValue}`;
+
+        resultItem.appendChild(dataDiv);
+        return resultItem;
+      }
+
+      // Listen for data updates from parent frame
+      window.addEventListener("message", (event) => {
+        if (event.data.type === "updateResults") {
+          const data = event.data.data;
+          if (data) {
+            // Show results and hide loading state
+            document.querySelector(".loading-state").classList.add("hidden");
+            const resultsContainer =
+              document.querySelector(".results-container");
+            resultsContainer.classList.remove("hidden");
+
+            // Clear existing content
+            const topicsResults = document.querySelector(".topics-results");
+            const finalResult = document.querySelector(".final-result");
+            topicsResults.innerHTML = "";
+            finalResult.innerHTML = "";
+
+            // Update topics data
+            const topics = data.nodes.filter((node) => node.type === "topic");
+            topics.forEach((topic) => {
+              const topicItem = createTopicItem(topic);
+              topicsResults.appendChild(topicItem);
+            });
+
+            // Update final result with placeholder value if no result node exists
+            const resultNode = data.nodes.find(
+              (node) => node.type === "result"
+            );
+            const resultItem = createResultItem(
+              resultNode ? resultNode.value : 5.5
+            );
+            finalResult.appendChild(resultItem);
+          } else {
+            // Show loading state
+            document.querySelector(".loading-state").classList.remove("hidden");
+            document
+              .querySelector(".results-container")
+              .classList.add("hidden");
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

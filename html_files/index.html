@@ -19,15 +19,30 @@
         <iframe src="form.html" class="input-frame" id="formFrame"></iframe>
 
         <!-- Graph Section -->
-        <iframe src="temp.html" class="graph-frame" id="graphFrame"></iframe>
+        <iframe src="graph.html" class="graph-frame" id="graphFrame"></iframe>
 
         <!-- Output Panel -->
-        <iframe src="temp.html" class="output-frame" id="outputFrame"></iframe>
+        <iframe
+          src="results.html"
+          class="output-frame"
+          id="outputFrame"
+        ></iframe>
       </div>
     </main>
     <footer>
-      <p>© 2023 Computational Graph. All rights reserved.</p>
+      <p>by Omri Triki & Yuval Disatnik</p>
     </footer>
     <script src="contentSelect.js"></script>
+    <script>
+      // Initialize frames
+      updateFramesContent(false);
+
+      // Listen for deploy button click
+      window.addEventListener("message", (event) => {
+        if (event.data.type === "deploy") {
+          updateFramesContent(true);
+        }
+      });
+    </script>
   </body>
 </html>

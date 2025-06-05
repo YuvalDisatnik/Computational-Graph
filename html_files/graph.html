@@ -1,11 +1,18 @@
-<link rel="stylesheet" href="styles.css" />
-<div class="panel output-panel">
-  <h2>Results (Taken from graph.html)</h2>
-  <ul id="results">
-    <li>Agent 1:</li>
-    <li>Agent 2:</li>
-    <li>Agent 3:</li>
-    <li>Agent 4:</li>
-    <li>Agent 5:</li>
-  </ul>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="temp-page">
+    <div class="graph-panel">
+      <div class="graph-container">
+        <svg id="graphCanvas"></svg>
+        <div class="loading-state">
+          <div class="loader"></div>
+          <p class="loading-message">Waiting for deployment</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

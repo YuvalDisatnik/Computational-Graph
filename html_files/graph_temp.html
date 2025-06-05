@@ -1,0 +1,279 @@
+<!-- graph_temp.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Computational Graph</title>
+
+    <!-- Core libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.31.0/dist/cytoscape.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Garamond&display=swap");
+
+      html,
+      body,
+      #cy {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: white;
+        font-family: Garamond, monospace;
+      }
+
+      #cy {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+
+      /* Modern theme variables */
+      :root {
+        --topic-color: #f4f4f9;
+        --topic-border: #2383c4;
+        --agent-color: #ffffff;
+        --agent-border: #23c483;
+        --edge-color: #2563eb;
+        --text-color: #333333;
+        --shadow-color: rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- This <div> is where Cytoscape will render the graph -->
+    <div id="cy"></div>
+
+    <!-- 
+      4) We create a <script type="application/json"> tag whose contents
+         will be replaced (server-side) with the actual JSON. 
+         Your Java code should literally replace the string "__GRAPH_DATA_JSON__". 
+    -->
+    <script id="graph-data" type="application/json">
+      {
+        "nodes": [
+          {
+            "id": "A",
+            "label": "A",
+            "type": "topic",
+            "value": 2.0
+          },
+          {
+            "id": "B",
+            "label": "B",
+            "type": "topic",
+            "value": 3.5
+          },
+          {
+            "id": "plus",
+            "label": "plus",
+            "type": "agent"
+          },
+          {
+            "id": "C",
+            "label": "C",
+            "type": "topic",
+            "value": 5.5
+          },
+          {
+            "id": "times",
+            "label": "times",
+            "type": "agent"
+          },
+          {
+            "id": "D",
+            "label": "D",
+            "type": "topic",
+            "value": 1.0
+          },
+          {
+            "id": "result",
+            "label": "Result",
+            "type": "result",
+            "value": 5.5
+          }
+        ],
+        "edges": [
+          { "source": "A", "target": "plus" },
+          { "source": "B", "target": "plus" },
+          { "source": "plus", "target": "C" },
+          { "source": "C", "target": "times" },
+          { "source": "D", "target": "times" },
+          { "source": "times", "target": "result" }
+        ]
+      }
+    </script>
+
+    <!-- 5) The "renderer" script: parse the JSON and draw the graph -->
+    <script>
+      (function () {
+        // Attempt to read the JSON from #graph-data
+        let dataNode = document.getElementById("graph-data");
+        let data = null;
+
+        try {
+          data = JSON.parse(dataNode.textContent.trim());
+        } catch (e) {
+          console.warn("No valid graph data found:", e);
+        }
+
+        // If we didn't get any data (e.g. someone opened the template
+        // directly, or the placeholder wasn't replaced), show a message.
+        if (!data || !data.nodes || !data.edges) {
+          document.body.innerHTML = `
+            <div style="font-family: Garamond, monospace; text-align: center; margin-top: 20%; color: var(--text-color);">
+              <h2>No graph data provided</h2>
+              <p>Please load a configuration file or ensure the server has injected the graph JSON.</p>
+            </div>
+          `;
+          return;
+        }
+
+        // Otherwise, initialize Cytoscape exactly as before, using data.nodes and data.edges:
+        const cy = cytoscape({
+          container: document.getElementById("cy"),
+          elements: [
+            ...data.nodes.map((n) => ({
+              data: {
+                ...n,
+                label:
+                  n.type === "topic" ? `${n.label}\n(${n.value})` : n.label,
+              },
+            })),
+            ...data.edges.map((e) => ({ data: e })),
+          ],
+
+          layout: {
+            name: "dagre",
+            rankDir: "LR",
+            padding: 50,
+            nodeSep: 100,
+            edgeSep: 50,
+            rankSep: 100,
+            animate: true,
+            animationDuration: 300,
+          },
+
+          style: [
+            {
+              selector: 'node[type = "topic"]',
+              style: {
+                shape: "round-rectangle",
+                "background-color": "var(--topic-color)",
+                "border-width": "2px",
+                "border-color": "var(--topic-border)",
+                "text-valign": "center",
+                "text-halign": "center",
+                "text-wrap": "wrap",
+                "font-family": "Garamond",
+                "font-size": "14px",
+                "font-weight": "500",
+                color: "var(--text-color)",
+                padding: "15px",
+                width: "label",
+                height: "label",
+                "box-shadow": "0 4px 6px var(--shadow-color)",
+                "text-margin-y": "5px",
+                label: "data(label)",
+              },
+            },
+            {
+              selector: 'node[type = "result"]',
+              style: {
+                shape: "round-diamond",
+                "background-color": "#e2e8f0",
+                "border-width": "3px",
+                "border-color": "#7c3aed",
+                "text-valign": "center",
+                "text-halign": "center",
+                "text-wrap": "wrap",
+                "font-family": "Garamond",
+                "font-size": "16px",
+                "font-weight": "700",
+                color: "var(--text-color)",
+                padding: "20px",
+                width: "label",
+                height: "label",
+                "box-shadow": "0 6px 8px var(--shadow-color)",
+                "text-margin-y": "5px",
+                label: "data(label)",
+              },
+            },
+            {
+              selector: 'node[type = "agent"]',
+              style: {
+                shape: "ellipse",
+                "background-color": "var(--agent-color)",
+                "border-width": "2px",
+                "border-color": "var(--agent-border)",
+                "text-valign": "center",
+                "text-halign": "center",
+                "font-family": "Garamond",
+                "font-size": "14px",
+                "font-weight": "500",
+                color: "var(--text-color)",
+                width: "60px",
+                height: "60px",
+                "box-shadow": "0 4px 6px var(--shadow-color)",
+                label: "data(label)",
+              },
+            },
+            {
+              selector: "edge",
+              style: {
+                width: 2,
+                "line-color": "var(--edge-color)",
+                "target-arrow-color": "var(--edge-color)",
+                "target-arrow-shape": "triangle",
+                "curve-style": "bezier",
+                "arrow-scale": 1.5,
+                opacity: 0.8,
+              },
+            },
+            {
+              selector: ":selected",
+              style: {
+                "border-width": "3px",
+                "border-color": "#ff4757",
+                "box-shadow": "0 0 10px #ff4757",
+              },
+            },
+            {
+              selector: ".highlighted",
+              style: {
+                "background-color": "#ffeaa7",
+                "line-color": "#fdcb6e",
+                "target-arrow-color": "#fdcb6e",
+                "transition-property":
+                  "background-color, line-color, target-arrow-color",
+                "transition-duration": "0.3s",
+              },
+            },
+          ],
+        });
+
+        // Enable node dragging and other interactions
+        cy.on("mouseover", "node", function (e) {
+          e.target.style("border-width", "3px");
+        });
+
+        cy.on("mouseout", "node", function (e) {
+          if (!e.target.selected()) {
+            e.target.style("border-width", "2px");
+          }
+        });
+
+        // Add zoom controls
+        cy.userZoomingEnabled(true);
+        cy.userPanningEnabled(true);
+        cy.boxSelectionEnabled(true);
+
+        // Fit the graph to the viewport
+        cy.fit(50);
+      })();
+    </script>
+  </body>
+</html>

@@ -1,21 +1,125 @@
 <!--// Contain loading of Configuration file // Contain sending a message to topic-->
-<link rel="stylesheet" href="styles.css" />
-<!-- form.html -->
-<div class="panel input-panel">
-  <h2>Configuration</h2>
-  <div class="file-selection">
-    <span id="fileName">No file chosen</span>
-    <button id="chooseFileBtn">Choose File</button>
-    <input type="file" id="configFile" style="display: none" />
-    <button id="deployBtn">Deploy</button>
-  </div>
-  <hr style="width: 90%" />
-  <h3>Send Message</h3>
-  <label for="topic">Topic Name:</label>
-  <input type="text" id="topic" placeholder="Enter topic..." />
-  <label for="message">Message:</label>
-  <input type="number" id="message" placeholder="Enter value..." />
-  <button id="sendBtn">Send</button>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="panel input-panel">
+      <h2>Configuration</h2>
+      <div class="file-selection">
+        <span id="fileName">No file chosen</span>
+        <button id="chooseFileBtn">Choose File</button>
+        <input type="file" id="configFile" style="display: none" />
+        <button id="deployBtn">Deploy</button>
+      </div>
+      <hr style="width: 90%" />
 
-<script src="fileUpload.js"></script>
+      <!-- Send Message Section -->
+      <h3>Send Message</h3>
+      <label for="topic">Topic Name:</label>
+      <input type="text" id="topic" placeholder="Enter topic..." />
+      <label for="message">Message:</label>
+      <input type="number" id="message" placeholder="Enter value..." />
+      <button id="sendBtn">Send</button>
+
+      <hr style="width: 90%" />
+
+      <!-- Generate Configuration Section -->
+      <div class="generate-section">
+        <div class="section-header">
+          <h3>Generate Configuration File</h3>
+          <div class="info-icon">
+            <i class="fas fa-star"></i
+            ><i
+              class="fas fa-star"
+              style="font-size: 0.7em; margin-left: -0.3em"
+            ></i>
+          </div>
+        </div>
+        <textarea
+          id="graphDescription"
+          placeholder="Describe your graph structure..."
+        ></textarea>
+        <button id="generateBtn">Generate</button>
+      </div>
+    </div>
+
+    <style>
+      .generate-section {
+        margin: 15px 0;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .info-icon {
+        position: relative;
+        color: #2383c4;
+        cursor: help;
+      }
+
+      .info-icon:hover .tooltip {
+        display: block;
+      }
+
+      .tooltip {
+        display: none;
+        position: absolute;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 10px;
+        width: 250px;
+        font-size: 14px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        left: 25px;
+        top: -5px;
+        color: #4a5568;
+        line-height: 1.4;
+      }
+
+      #generateBtn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #7c3aed, #2383c4);
+        color: white;
+      }
+
+      #generateBtn:hover {
+        background: linear-gradient(135deg, #6d28d9, #1e6db7);
+        transform: translateY(-2px);
+      }
+
+      #generateBtn i {
+        font-size: 14px;
+      }
+
+      .input-panel button {
+        transition: all 0.3s ease;
+      }
+    </style>
+
+    <script>
+      document
+        .getElementById("deployBtn")
+        .addEventListener("click", function () {
+          // Notify parent window about deployment
+          window.parent.postMessage({ type: "deploy" }, "*");
+        });
+    </script>
+    <script src="fileUpload.js"></script>
+  </body>
+</html>
