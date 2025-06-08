@@ -1,6 +1,6 @@
-package test;
+package server;
 
-import test.RequestParser.RequestInfo;
+import server.RequestParser.RequestInfo;
 
 import java.io.BufferedReader;
 import java.io.IOException;
