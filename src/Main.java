@@ -1,7 +1,7 @@
-//import configs.*;
+import configs.*;
 import server.*;
-//import servlets.*;
-//import graph.*;
+import servlets.*;
+import graph.*;
 
 public class Main {
     public static void main(String[] args) throws Exception{
@@ -9,7 +9,7 @@ public class Main {
         HTTPServer server=new MyHTTPServer(8080,5);
 
         //server.addServlet("GET", "/publish", new TopicDisplayer());
-        //server.addServlet("POST", "/upload", new ConfLoader());
+        server.addServlet("POST", "/upload", new ConfLoader());
         //server.addServlet("GET", "/app/", new HtmlLoader("html_files"));
 
         server.start();
