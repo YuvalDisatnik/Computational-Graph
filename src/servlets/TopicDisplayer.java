@@ -147,14 +147,3 @@ public class TopicDisplayer implements Servlet {
         // No resources to close
     }
 }
-
-
-
-
-
-
-
-
-
-
->>>>>>> 7797665ec573d43ccb3ace5b6afa1eaf92e7ce71
