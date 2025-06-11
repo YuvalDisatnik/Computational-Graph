@@ -1,26 +1,29 @@
+package servlets;
+
 import graph.Message;
 import graph.Topic;
 import graph.TopicManagerSingleton;
+import server.Servlet;
+import server.RequestParser.RequestInfo;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
-import java.util.Map;
 
 public class TopicDisplayer implements Servlet {
 
     @Override
-    public void handle(String httpMethod, String uri, Map<String, String> parameters, OutputStream toClient) throws IOException {
+    public void handle(RequestInfo ri, OutputStream toClient) throws IOException {
         try {
             // Validate HTTP method
-            if (!"POST".equalsIgnoreCase(httpMethod)) {
+            if (!"POST".equalsIgnoreCase(ri.getHttpCommand())) {
                 sendErrorResponse(toClient, "Only POST method is supported");
                 return;
             }
 
             // Extract parameters from the request
-            String topicName = parameters.get("topic");
-            String messageValue = parameters.get("message");
+            String topicName = ri.getParameters().get("topic");
+            String messageValue = ri.getParameters().get("message");
 
             // Validate input
             if (topicName == null || topicName.trim().isEmpty()) {
@@ -94,8 +97,14 @@ public class TopicDisplayer implements Servlet {
             for (Topic topic : topics) {
                 html.append("            <tr>\n");
                 html.append("                <td>").append(escapeHtml(topic.name)).append("</td>\n");
-                Message lastMessage = topic.getLastMessage();
-                String lastValue = (lastMessage != null) ? lastMessage.asText : "No messages";
+                // Check if topic has messages and get the latest value
+                String lastValue = "No messages";
+                try {
+                    // This is a simplified approach - adapt based on actual Topic API
+                    lastValue = topic.toString(); // or whatever method provides the current value
+                } catch (Exception e) {
+                    lastValue = "Error retrieving value";
+                }
                 html.append("                <td>").append(escapeHtml(lastValue)).append("</td>\n");
                 html.append("            </tr>\n");
             }
@@ -148,3 +157,4 @@ public class TopicDisplayer implements Servlet {
 
 
 
+>>>>>>> 7797665ec573d43ccb3ace5b6afa1eaf92e7ce71

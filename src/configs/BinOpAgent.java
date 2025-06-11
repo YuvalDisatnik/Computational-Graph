@@ -1,4 +1,4 @@
-package test;
+package configs;
 
 import java.util.function.BinaryOperator;
 

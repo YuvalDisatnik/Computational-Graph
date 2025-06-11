@@ -1,4 +1,4 @@
-package test;
+package configs;
 
 
 public class MathExampleConfig implements Config {
@@ -19,5 +19,9 @@ public class MathExampleConfig implements Config {
     public int getVersion() {
         return 1;
     }
-    
+
+    @Override
+    public void close() {
+        // No cleanup needed for this simple config
+    }
 }
