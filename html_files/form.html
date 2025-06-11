@@ -16,7 +16,7 @@
       <div class="file-selection">
         <span id="fileName">No file chosen</span>
         <button id="chooseFileBtn">Choose File</button>
-        <input type="file" id="configFile" style="display: none" />
+        <input type="file" id="configFile" style="display: none" accept=".json,.txt,.conf" />
         <button id="deployBtn">Deploy</button>
       </div>
       <hr style="width: 90%" />
@@ -26,7 +26,7 @@
       <label for="topic">Topic Name:</label>
       <input type="text" id="topic" placeholder="Enter topic..." />
       <label for="message">Message:</label>
-      <input type="number" id="message" placeholder="Enter value..." />
+      <input type="text" id="message" placeholder="Enter message..." />
       <button id="sendBtn">Send</button>
 
       <hr style="width: 90%" />
@@ -41,13 +41,27 @@
               class="fas fa-star"
               style="font-size: 0.7em; margin-left: -0.3em"
             ></i>
+            <div class="tooltip">
+              Describe your computational graph structure using natural language.
+              The system will generate a configuration file based on your description.
+              Include information about nodes, connections, and operations.
+            </div>
           </div>
         </div>
         <textarea
           id="graphDescription"
           placeholder="Describe your graph structure..."
+          rows="4"
         ></textarea>
-        <button id="generateBtn">Generate</button>
+        <button id="generateBtn">
+          <i class="fas fa-magic"></i>
+          Generate
+        </button>
+      </div>
+
+      <!-- Status Messages -->
+      <div id="statusMessages" class="status-messages" style="display: none;">
+        <div id="statusText"></div>
       </div>
     </div>
 
@@ -110,15 +124,179 @@
       .input-panel button {
         transition: all 0.3s ease;
       }
+
+      .status-messages {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      .status-success {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+      }
+
+      .status-error {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+      }
+
+      .status-info {
+        background-color: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+      }
+
+      #graphDescription {
+        resize: vertical;
+        min-height: 80px;
+      }
     </style>
 
     <script>
-      document
-        .getElementById("deployBtn")
-        .addEventListener("click", function () {
-          // Notify parent window about deployment
-          window.parent.postMessage({ type: "deploy" }, "*");
+      // Initialize status display
+      function showStatus(message, type = 'info') {
+        const statusDiv = document.getElementById('statusMessages');
+        const statusText = document.getElementById('statusText');
+        
+        statusText.textContent = message;
+        statusDiv.className = `status-messages status-${type}`;
+        statusDiv.style.display = 'block';
+        
+        // Hide status after 5 seconds
+        setTimeout(() => {
+          statusDiv.style.display = 'none';
+        }, 5000);
+      }
+
+      // Deploy button functionality
+      document.getElementById("deployBtn").addEventListener("click", function () {
+        const fileInput = document.getElementById("configFile");
+        
+        if (!fileInput.files[0]) {
+          showStatus("Please select a configuration file first.", "error");
+          return;
+        }
+        
+        showStatus("Deploying configuration...", "info");
+        
+        // Notify parent window about deployment
+        window.parent.postMessage({ type: "deploy" }, "*");
+        
+        setTimeout(() => {
+          showStatus("Configuration deployed successfully!", "success");
+        }, 1000);
+      });
+
+      // Send message functionality
+      document.getElementById("sendBtn").addEventListener("click", function () {
+        const topic = document.getElementById("topic").value.trim();
+        const message = document.getElementById("message").value.trim();
+        
+        if (!topic) {
+          showStatus("Please enter a topic name.", "error");
+          return;
+        }
+        
+        if (!message) {
+          showStatus("Please enter a message.", "error");
+          return;
+        }
+        
+        showStatus("Sending message...", "info");
+        
+        // Send message to backend
+        fetch('/publish', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            topic: topic,
+            message: message
+          })
+        })
+        .then(response => {
+          if (response.ok) {
+            showStatus(`Message sent to topic "${topic}" successfully!`, "success");
+            // Clear the form
+            document.getElementById("topic").value = "";
+            document.getElementById("message").value = "";
+          } else {
+            showStatus("Failed to send message. Please try again.", "error");
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showStatus("Network error. Please check your connection.", "error");
         });
+      });
+
+      // Generate configuration functionality
+      document.getElementById("generateBtn").addEventListener("click", function () {
+        const description = document.getElementById("graphDescription").value.trim();
+        
+        if (!description) {
+          showStatus("Please enter a description for the graph structure.", "error");
+          return;
+        }
+        
+        showStatus("Generating configuration file...", "info");
+        
+        // Send description to backend for config generation
+        fetch('/generate-config', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            description: description
+          })
+        })
+        .then(response => response.blob())
+        .then(blob => {
+          // Create download link for generated config
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = 'generated-config.json';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          
+          showStatus("Configuration file generated and downloaded!", "success");
+          document.getElementById("graphDescription").value = "";
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showStatus("Failed to generate configuration. Please try again.", "error");
+        });
+      });
+
+      // Handle Enter key in input fields
+      document.getElementById("topic").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+          document.getElementById("message").focus();
+        }
+      });
+
+      document.getElementById("message").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+          document.getElementById("sendBtn").click();
+        }
+      });
+
+      document.getElementById("graphDescription").addEventListener("keydown", function(event) {
+        if (event.key === "Enter" && event.ctrlKey) {
+          event.preventDefault();
+          document.getElementById("generateBtn").click();
+        }
+      });
     </script>
     <script src="fileUpload.js"></script>
   </body>
