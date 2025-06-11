@@ -2,9 +2,9 @@ TODO List:
 
  - Implement form.html (page 2)             - Omri      - Done
  - Implement graph.html (page 2)            - Yuval
- - Implement TopicDisplayer (page 3)        - Omri 
+ - Implement TopicDisplayer (page 3)        - Omri      - Done
  - Implement ConfLoader (page 3)            - Yuval
- - Implement HtmlLoader (page 3)            - Omri
+ - Implement HtmlLoader (page 3)            - Omri      - Done
  - Implement HtmlGraphWriter (page 4)
  - Final finishes
 
