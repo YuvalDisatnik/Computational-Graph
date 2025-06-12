@@ -2,17 +2,336 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Computational Graph</title>
     <link rel="stylesheet" href="styles.css" />
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
   </head>
   <body class="temp-page">
     <div class="graph-panel">
       <div class="graph-container">
-        <svg id="graphCanvas"></svg>
+        <!-- Graph Canvas Placeholder -->
+        <svg id="graphCanvas" width="100%" height="100%">
+          <!-- Background pattern -->
+          <defs>
+            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e2e8f0" stroke-width="1" opacity="0.3"/>
+            </pattern>
+            
+            <!-- Animated gradient -->
+            <linearGradient id="pulseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#2383c4;stop-opacity:0.1">
+                <animate attributeName="stop-opacity" values="0.1;0.3;0.1" dur="2s" repeatCount="indefinite"/>
+              </stop>
+              <stop offset="50%" style="stop-color:#7c3aed;stop-opacity:0.2">
+                <animate attributeName="stop-opacity" values="0.2;0.4;0.2" dur="2s" repeatCount="indefinite"/>
+              </stop>
+              <stop offset="100%" style="stop-color:#23c483;stop-opacity:0.1">
+                <animate attributeName="stop-opacity" values="0.1;0.3;0.1" dur="2s" repeatCount="indefinite"/>
+              </stop>
+            </linearGradient>
+          </defs>
+          
+          <!-- Grid background -->
+          <rect width="100%" height="100%" fill="url(#grid)" />
+          
+          <!-- Animated background overlay -->
+          <rect width="100%" height="100%" fill="url(#pulseGradient)" />
+          
+          <!-- Sample graph structure preview (ghosted) -->
+          <g id="previewGraph" opacity="0.15">
+            <!-- Topics (circles) -->
+            <circle cx="150" cy="200" r="30" fill="#2383c4" />
+            <text x="150" y="205" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Topic A</text>
+            
+            <circle cx="150" cy="300" r="30" fill="#2383c4" />
+            <text x="150" y="305" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Topic B</text>
+            
+            <!-- Agent (rectangle) -->
+            <rect x="300" y="230" width="80" height="40" rx="20" fill="#23c483" />
+            <text x="340" y="255" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Agent</text>
+            
+            <!-- Result (diamond) -->
+            <polygon points="500,250 520,230 540,250 520,270" fill="#7c3aed" />
+            <text x="520" y="255" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Result</text>
+            
+            <!-- Connections -->
+            <line x1="180" y1="200" x2="300" y2="240" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)" />
+            <line x1="180" y1="300" x2="300" y2="260" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)" />
+            <line x1="380" y1="250" x2="500" y2="250" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)" />
+            
+            <!-- Arrow marker -->
+            <defs>
+              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+              </marker>
+            </defs>
+          </g>
+        </svg>
+        
+        <!-- Main Loading State -->
         <div class="loading-state">
-          <div class="loader"></div>
-          <p class="loading-message">Waiting for deployment</p>
+          <div class="graph-preview-container">
+            <div class="graph-icon">
+              <i class="fas fa-project-diagram"></i>
+            </div>
+            
+            <h2 class="graph-title">Computational Graph</h2>
+            
+            <div class="feature-highlights">
+              <div class="feature-item">
+                <i class="fas fa-circle"></i>
+                <span>Topics</span>
+              </div>
+              <div class="feature-item">
+                <i class="fas fa-cogs"></i>
+                <span>Agents</span>
+              </div>
+              <div class="feature-item">
+                <i class="fas fa-arrow-right"></i>
+                <span>Data Flow</span>
+              </div>
+              <div class="feature-item">
+                <i class="fas fa-eye"></i>
+                <span>Real-time</span>
+              </div>
+            </div>
+            
+            <div class="status-container">
+              <div class="loader"></div>
+              <p class="loading-message">Waiting for configuration deployment...</p>
+            </div>
+            
+            <div class="instructions">
+              <p>
+                <i class="fas fa-info-circle"></i>
+                Deploy a configuration file to visualize your computational graph
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+
+    <style>
+      /* Additional styles specific to graph.html */
+      .graph-preview-container {
+        text-align: center;
+        max-width: 400px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .graph-icon {
+        font-size: 4rem;
+        color: #2383c4;
+        margin-bottom: 20px;
+        animation: float 3s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+      }
+
+      .graph-title {
+        font-size: 1.8rem;
+        color: #333;
+        margin: 0 0 25px 0;
+        font-weight: 600;
+      }
+
+      .feature-highlights {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 30px;
+      }
+
+      .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px;
+        background: rgba(35, 131, 196, 0.1);
+        border-radius: 8px;
+        color: #2383c4;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .feature-item:hover {
+        background: rgba(35, 131, 196, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .feature-item i {
+        font-size: 16px;
+      }
+
+      .status-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .loading-message {
+        font-size: 16px;
+        color: #666;
+        margin: 0;
+        font-weight: 500;
+      }
+
+      .instructions {
+        padding: 15px;
+        background: rgba(124, 58, 237, 0.1);
+        border-radius: 8px;
+        border-left: 4px solid #7c3aed;
+      }
+
+      .instructions p {
+        margin: 0;
+        color: #7c3aed;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: center;
+      }
+
+      .instructions i {
+        font-size: 16px;
+      }
+
+      /* Animation for preview graph elements */
+      #previewGraph {
+        animation: fadeInOut 4s ease-in-out infinite;
+      }
+
+      @keyframes fadeInOut {
+        0%, 100% { opacity: 0.05; }
+        50% { opacity: 0.25; }
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 600px) {
+        .graph-preview-container {
+          max-width: 90%;
+          padding: 15px;
+        }
+
+        .graph-title {
+          font-size: 1.5rem;
+        }
+
+        .feature-highlights {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+
+        .graph-icon {
+          font-size: 3rem;
+        }
+      }
+
+      /* Enhanced loader styling for this page */
+      .status-container .loader {
+        width: 200px;
+        --loader-color: #2383c4;
+      }
+
+      /* Subtle pulse animation for the entire container */
+      .graph-preview-container {
+        animation: subtlePulse 6s ease-in-out infinite;
+      }
+
+      @keyframes subtlePulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+      }
+    </style>
+
+    <script>
+      // Add some interactive behavior
+      document.addEventListener('DOMContentLoaded', function() {
+        const featureItems = document.querySelectorAll('.feature-item');
+        
+        // Add staggered animation to feature items
+        featureItems.forEach((item, index) => {
+          item.style.animationDelay = `${index * 0.1}s`;
+          item.style.animation = 'slideInUp 0.6s ease-out forwards';
+        });
+
+        // Add click interaction to feature items
+        featureItems.forEach(item => {
+          item.addEventListener('click', function() {
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+              this.style.transform = '';
+            }, 150);
+          });
+        });
+
+        // Listen for deployment message from parent
+        window.addEventListener('message', function(event) {
+          if (event.data.type === 'deployed') {
+            showDeploymentTransition();
+          }
+        });
+      });
+
+      // CSS for slide in animation
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .feature-item {
+          opacity: 0;
+        }
+      `;
+      document.head.appendChild(style);
+
+      function showDeploymentTransition() {
+        const loadingMessage = document.querySelector('.loading-message');
+        const loader = document.querySelector('.loader');
+        
+        if (loadingMessage) {
+          loadingMessage.textContent = 'Loading computational graph...';
+          loadingMessage.style.color = '#23c483';
+        }
+        
+        if (loader) {
+          loader.style.setProperty('--loader-color', '#23c483');
+        }
+        
+        // Transition to actual graph (this would normally redirect to graph_temp.html)
+        setTimeout(() => {
+          if (loadingMessage) {
+            loadingMessage.textContent = 'Graph loaded successfully!';
+          }
+        }, 2000);
+      }
+    </script>
   </body>
 </html>

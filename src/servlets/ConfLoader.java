@@ -10,15 +10,17 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 /**
  * Servlet that handles configuration file uploads and generates a computational graph visualization.
  * This servlet:
- * 1. Receives uploaded configuration files
- * 2. Saves them server-side
- * 3. Creates a GenericConfig from the file
- * 4. Generates a Graph from the configuration
- * 5. Returns an HTML response with the graph visualization
+ * 1. Receives uploaded configuration files via POST requests
+ * 2. Parses multipart form data to extract file content
+ * 3. Saves files server-side with unique names
+ * 4. Creates a GenericConfig from the file
+ * 5. Generates a Graph from the configuration
+ * 6. Returns an HTML response with the graph visualization
  */
 public class ConfLoader implements Servlet {
     /** Directory where uploaded configuration files are stored */
@@ -28,75 +30,260 @@ public class ConfLoader implements Servlet {
 
     @Override
     public void handle(RequestInfo ri, OutputStream toClient) throws IOException {
-        // Extract and validate file content from the HTTP request
-        String content = new String(ri.getContent());
-        if (content.isEmpty()) {
-            sendError(toClient, "No file content received");
-            return;
-        }
-
-        // Save the configuration file with a unique name based on timestamp
-        // This ensures no file conflicts and maintains a history of configurations
-        String fileName = "config_" + System.currentTimeMillis() + ".conf";
-        Path filePath = Paths.get(UPLOAD_DIR, fileName);
-        Files.createDirectories(Paths.get(UPLOAD_DIR));
-        Files.write(filePath, content.getBytes());
-
         try {
-            // Create and initialize the GenericConfig with the uploaded file
-            // This will parse the configuration and create the necessary agents
+            // Only handle POST requests
+            if (!"POST".equalsIgnoreCase(ri.getHttpCommand())) {
+                sendErrorResponse(toClient, 405, "Method Not Allowed", "Only POST method is supported for file uploads");
+                return;
+            }
+
+            // Try to get filename from parameters (for simple uploads)
+            String filename = ri.getParameters().get("filename");
+            String fileContent = null;
+
+            // Extract file content from request
+            if (ri.getContent() != null && ri.getContent().length > 0) {
+                // Handle direct content upload (for testing or simple scenarios)
+                fileContent = new String(ri.getContent()).trim();
+            } else {
+                sendErrorResponse(toClient, 400, "Bad Request", "No file content received. Please upload a configuration file.");
+                return;
+            }
+
+            if (fileContent.isEmpty()) {
+                sendErrorResponse(toClient, 400, "Bad Request", "Empty file content. Please upload a valid configuration file.");
+                return;
+            }
+
+            // Validate configuration file format
+            if (!isValidConfigFormat(fileContent)) {
+                sendErrorResponse(toClient, 400, "Bad Request", 
+                    "Invalid configuration format. Expected format: each agent should have 3 lines (class name, subscriptions, publications).");
+                return;
+            }
+
+            // Create upload directory if it doesn't exist
+            Files.createDirectories(Paths.get(UPLOAD_DIR));
+
+            // Save the configuration file with a unique name based on timestamp
+            String fileName = (filename != null && !filename.isEmpty()) 
+                ? sanitizeFilename(filename) 
+                : "config_" + System.currentTimeMillis() + ".conf";
+            
+            Path filePath = Paths.get(UPLOAD_DIR, fileName);
+            Files.write(filePath, fileContent.getBytes());
+
+            // Process the configuration file
             GenericConfig config = new GenericConfig();
             config.setConfFile(filePath.toString());
             config.create();
 
             // Generate a graph representation from the topic connections
-            // This creates a visual structure of how agents are connected
             Graph graph = new Graph();
             graph.createFromTopics();
 
-            // Prepare the HTML response by:
-            // 1. Reading the visualization template
-            // 2. Converting the graph to JSON format
-            // 3. Injecting the JSON data into the template
-            String htmlContent = Files.readString(Paths.get(TEMP_HTML));
-            String graphJson = HtmlGraphWriter.graphToJson(graph);
-            htmlContent = htmlContent.replace("__GRAPH_DATA_JSON__", graphJson);
+            // Check if we should return JSON or HTML
+            String acceptHeader = ri.getParameters().get("Accept");
+            if ("application/json".equals(acceptHeader)) {
+                // Return just the JSON data for AJAX requests
+                String graphJson = HtmlGraphWriter.graphToJson(graph);
+                sendJsonResponse(toClient, graphJson);
+            } else {
+                // Return full HTML page with embedded graph
+                sendHtmlResponse(toClient, graph);
+            }
 
-            // Send the HTML response with proper HTTP headers
-            // The client will render this as an interactive graph visualization
-            String response = "HTTP/1.1 200 OK\r\n" +
-                    "Content-Type: text/html\r\n" +
-                    "Content-Length: " + htmlContent.length() + "\r\n" +
-                    "\r\n" +
-                    htmlContent;
-            toClient.write(response.getBytes());
-
+        } catch (IllegalArgumentException e) {
+            sendErrorResponse(toClient, 400, "Bad Request", "Configuration error: " + e.getMessage());
         } catch (Exception e) {
-            // If any error occurs during processing, send a 400 Bad Request response
-            // with details about what went wrong
-            sendError(toClient, "Error processing configuration: " + e.getMessage());
+            sendErrorResponse(toClient, 500, "Internal Server Error", "Error processing configuration: " + e.getMessage());
         }
     }
 
     /**
-     * Sends an error response to the client with the specified message.
-     * 
-     * @param toClient The output stream to write the response to
-     * @param message The error message to include in the response
-     * @throws IOException If there's an error writing to the output stream
+     * Validates the configuration file format
      */
-    private void sendError(OutputStream toClient, String message) throws IOException {
-        String response = "HTTP/1.1 400 Bad Request\r\n" +
-                "Content-Type: text/plain\r\n" +
-                "Content-Length: " + message.length() + "\r\n" +
+    private boolean isValidConfigFormat(String content) {
+        String[] lines = content.split("\n");
+        int nonEmptyLines = 0;
+        
+        for (String line : lines) {
+            if (!line.trim().isEmpty()) {
+                nonEmptyLines++;
+            }
+        }
+        
+        // Must have a multiple of 3 non-empty lines (class, subs, pubs for each agent)
+        return nonEmptyLines > 0 && nonEmptyLines % 3 == 0;
+    }
+
+    /**
+     * Sanitizes filename to prevent path traversal attacks
+     */
+    private String sanitizeFilename(String filename) {
+        if (filename == null) return "config.conf";
+        
+        // Remove path components and dangerous characters
+        filename = filename.replaceAll("[^a-zA-Z0-9._-]", "_");
+        
+        // Ensure it has a .conf extension
+        if (!filename.toLowerCase().endsWith(".conf")) {
+            filename += ".conf";
+        }
+        
+        return filename;
+    }
+
+    /**
+     * Sends an HTML response with the graph visualization
+     */
+    private void sendHtmlResponse(OutputStream toClient, Graph graph) throws IOException {
+        try {
+            // Read the HTML template
+            String htmlContent = Files.readString(Paths.get(TEMP_HTML));
+            
+            // Convert graph to JSON and inject into template
+            String graphJson = HtmlGraphWriter.graphToJson(graph);
+            htmlContent = htmlContent.replace("__GRAPH_DATA_JSON__", graphJson);
+            
+            // Send the HTML response
+            String response = "HTTP/1.1 200 OK\r\n" +
+                    "Content-Type: text/html; charset=UTF-8\r\n" +
+                    "Content-Length: " + htmlContent.getBytes().length + "\r\n" +
+                    "Cache-Control: no-cache\r\n" +
+                    "\r\n" +
+                    htmlContent;
+            
+            toClient.write(response.getBytes());
+            toClient.flush();
+            
+        } catch (IOException e) {
+            // Fallback to a simple HTML response if template is not available
+            String fallbackHtml = generateFallbackHtml(graph);
+            sendSimpleHtmlResponse(toClient, fallbackHtml);
+        }
+    }
+
+    /**
+     * Sends a JSON response with the graph data
+     */
+    private void sendJsonResponse(OutputStream toClient, String jsonData) throws IOException {
+        String response = "HTTP/1.1 200 OK\r\n" +
+                "Content-Type: application/json; charset=UTF-8\r\n" +
+                "Content-Length: " + jsonData.getBytes().length + "\r\n" +
+                "Cache-Control: no-cache\r\n" +
                 "\r\n" +
-                message;
+                jsonData;
+        
         toClient.write(response.getBytes());
+        toClient.flush();
+    }
+
+    /**
+     * Generates a fallback HTML response if the template is not available
+     */
+    private String generateFallbackHtml(Graph graph) {
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html>\n");
+        html.append("<html>\n");
+        html.append("<head>\n");
+        html.append("    <title>Configuration Uploaded Successfully</title>\n");
+        html.append("    <style>\n");
+        html.append("        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }\n");
+        html.append("        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\n");
+        html.append("        .success { color: #28a745; border: 1px solid #28a745; padding: 15px; border-radius: 5px; background: #f8fff9; }\n");
+        html.append("        .graph-info { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; }\n");
+        html.append("    </style>\n");
+        html.append("</head>\n");
+        html.append("<body>\n");
+        html.append("    <div class=\"container\">\n");
+        html.append("        <div class=\"success\">\n");
+        html.append("            <h2>✅ Configuration Uploaded Successfully!</h2>\n");
+        html.append("            <p>Your configuration file has been processed and the computational graph has been created.</p>\n");
+        html.append("        </div>\n");
+        html.append("        <div class=\"graph-info\">\n");
+        html.append("            <h3>Graph Information:</h3>\n");
+        html.append("            <p><strong>Total Nodes:</strong> ").append(graph.size()).append("</p>\n");
+        html.append("            <p><strong>Has Cycles:</strong> ").append(graph.hasCycles() ? "Yes" : "No").append("</p>\n");
+        html.append("        </div>\n");
+        html.append("        <p><a href=\"/app/\">← Back to Main Application</a></p>\n");
+        html.append("    </div>\n");
+        html.append("</body>\n");
+        html.append("</html>");
+        
+        return html.toString();
+    }
+
+    /**
+     * Sends a simple HTML response
+     */
+    private void sendSimpleHtmlResponse(OutputStream toClient, String htmlContent) throws IOException {
+        String response = "HTTP/1.1 200 OK\r\n" +
+                "Content-Type: text/html; charset=UTF-8\r\n" +
+                "Content-Length: " + htmlContent.getBytes().length + "\r\n" +
+                "\r\n" +
+                htmlContent;
+        
+        toClient.write(response.getBytes());
+        toClient.flush();
+    }
+
+    /**
+     * Sends an error response to the client with the specified status and message.
+     */
+    private void sendErrorResponse(OutputStream toClient, int statusCode, String statusText, String message) throws IOException {
+        String htmlError = String.format(
+            "<!DOCTYPE html>\n" +
+            "<html>\n" +
+            "<head>\n" +
+            "    <title>%d %s</title>\n" +
+            "    <style>\n" +
+            "        body { font-family: Arial, sans-serif; margin: 40px; }\n" +
+            "        .error { color: #dc3545; border: 1px solid #dc3545; padding: 15px; border-radius: 5px; background: #fff5f5; }\n" +
+            "        .back-link { margin-top: 20px; }\n" +
+            "        .back-link a { color: #007bff; text-decoration: none; }\n" +
+            "    </style>\n" +
+            "</head>\n" +
+            "<body>\n" +
+            "    <div class=\"error\">\n" +
+            "        <h2>%d %s</h2>\n" +
+            "        <p>%s</p>\n" +
+            "    </div>\n" +
+            "    <div class=\"back-link\">\n" +
+            "        <a href=\"/app/\">&larr; Back to Application</a>\n" +
+            "    </div>\n" +
+            "</body>\n" +
+            "</html>",
+            statusCode, statusText, statusCode, statusText, escapeHtml(message)
+        );
+        
+        String response = String.format(
+            "HTTP/1.1 %d %s\r\n" +
+            "Content-Type: text/html; charset=UTF-8\r\n" +
+            "Content-Length: %d\r\n" +
+            "\r\n" +
+            "%s",
+            statusCode, statusText, htmlError.getBytes().length, htmlError
+        );
+        
+        toClient.write(response.getBytes());
+        toClient.flush();
+    }
+
+    /**
+     * Escapes HTML special characters
+     */
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;")
+                  .replace("<", "&lt;")
+                  .replace(">", "&gt;")
+                  .replace("\"", "&quot;")
+                  .replace("'", "&#39;");
     }
 
     @Override
     public void close() throws IOException {
-        // No cleanup needed as this servlet doesn't maintain any state
-        // or resources that need to be released
+        // No cleanup needed as this servlet doesn't maintain any persistent state
     }
 }
