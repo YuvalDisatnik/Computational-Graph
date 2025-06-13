@@ -33,7 +33,14 @@ public class ConfLoader implements Servlet {
         try {
             // Only handle POST requests
             if (!"POST".equalsIgnoreCase(ri.getHttpCommand())) {
-                sendErrorResponse(toClient, 405, "Method Not Allowed", "Only POST method is supported for file uploads");
+                sendErrorResponse(toClient, 405, "Method Not Allowed", "Only POST method is supported");
+                return;
+            }
+
+            // Check which endpoint is being called
+            String uri = ri.getUri();
+            if ("/generate-config".equals(uri)) {
+                handleGenerateConfig(ri, toClient);
                 return;
             }
 
@@ -98,6 +105,122 @@ public class ConfLoader implements Servlet {
         } catch (Exception e) {
             sendErrorResponse(toClient, 500, "Internal Server Error", "Error processing configuration: " + e.getMessage());
         }
+    }
+
+    /**
+     * Handles the /generate-config endpoint
+     */
+    private void handleGenerateConfig(RequestInfo ri, OutputStream toClient) throws IOException {
+        try {
+            // Extract JSON data from request body
+            byte[] contentBytes = ri.getContent();
+            String requestBody = contentBytes != null ? new String(contentBytes) : null;
+            
+            if (requestBody == null || requestBody.trim().isEmpty()) {
+                sendErrorResponse(toClient, 400, "Bad Request", "Request body is required");
+                return;
+            }
+
+            // Parse JSON to extract description
+            String description = extractDescriptionFromJson(requestBody);
+            if (description == null || description.trim().isEmpty()) {
+                sendErrorResponse(toClient, 400, "Bad Request", "Description is required");
+                return;
+            }
+
+            // Generate a simple configuration file based on description
+            String generatedConfig = generateConfigFromDescription(description);
+            
+            // Send the generated config as a file download
+            sendConfigFileResponse(toClient, generatedConfig);
+            
+        } catch (Exception e) {
+            sendErrorResponse(toClient, 500, "Internal Server Error", "Error generating configuration: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Extracts description from JSON request
+     */
+    private String extractDescriptionFromJson(String json) {
+        try {
+            // Simple JSON parsing for {"description": "value"}
+            String content = json.trim();
+            if (content.startsWith("{") && content.endsWith("}")) {
+                content = content.substring(1, content.length() - 1);
+            }
+            
+            String[] pairs = content.split(",");
+            for (String pair : pairs) {
+                String[] keyValue = pair.split(":", 2);
+                if (keyValue.length == 2) {
+                    String key = keyValue[0].trim().replaceAll("\"", "");
+                    String value = keyValue[1].trim().replaceAll("\"", "");
+                    
+                    if ("description".equals(key)) {
+                        return value;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Return null if parsing fails
+        }
+        return null;
+    }
+
+    /**
+     * Generates a simple configuration based on description
+     */
+    private String generateConfigFromDescription(String description) {
+        StringBuilder config = new StringBuilder();
+        
+        // Generate a simple configuration based on common patterns
+        config.append("# Generated configuration from description:\n");
+        config.append("# ").append(description).append("\n\n");
+        
+        // Add some basic agents based on keywords in description
+        if (description.toLowerCase().contains("add") || description.toLowerCase().contains("plus") || description.toLowerCase().contains("sum")) {
+            config.append("test.PlusAgent\n");
+            config.append("A,B\n");
+            config.append("SUM\n\n");
+        }
+        
+        if (description.toLowerCase().contains("increment") || description.toLowerCase().contains("inc")) {
+            config.append("test.IncAgent\n");
+            config.append("SUM\n");
+            config.append("RESULT\n\n");
+        }
+        
+        // Default simple configuration if no keywords match
+        if (config.toString().split("\n").length < 5) {
+            config.setLength(0);
+            config.append("# Generated configuration\n");
+            config.append("test.PlusAgent\n");
+            config.append("INPUT1,INPUT2\n");
+            config.append("OUTPUT1\n\n");
+            config.append("test.IncAgent\n");
+            config.append("OUTPUT1\n");
+            config.append("FINAL_RESULT\n");
+        }
+        
+        return config.toString();
+    }
+
+    /**
+     * Sends a configuration file as download response
+     */
+    private void sendConfigFileResponse(OutputStream toClient, String configContent) throws IOException {
+        String filename = "generated-config-" + System.currentTimeMillis() + ".conf";
+        
+        String response = "HTTP/1.1 200 OK\r\n" +
+                "Content-Type: application/octet-stream\r\n" +
+                "Content-Disposition: attachment; filename=\"" + filename + "\"\r\n" +
+                "Content-Length: " + configContent.getBytes().length + "\r\n" +
+                "\r\n" +
+                configContent;
+        
+        toClient.write(response.getBytes());
+        toClient.flush();
     }
 
     /**

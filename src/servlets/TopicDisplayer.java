@@ -21,9 +21,43 @@ public class TopicDisplayer implements Servlet {
                 return;
             }
 
-            // Extract parameters from the request
-            String topicName = ri.getParameters().get("topic");
-            String messageValue = ri.getParameters().get("message");
+            // Extract JSON data from request body
+            byte[] contentBytes = ri.getContent();
+            String requestBody = contentBytes != null ? new String(contentBytes) : null;
+            if (requestBody == null || requestBody.trim().isEmpty()) {
+                sendErrorResponse(toClient, "Request body is required");
+                return;
+            }
+            
+            // Parse JSON manually (simple approach)
+            String topicName = null;
+            String messageValue = null;
+            
+            try {
+                // Remove curly braces and split by comma
+                String jsonContent = requestBody.trim();
+                if (jsonContent.startsWith("{") && jsonContent.endsWith("}")) {
+                    jsonContent = jsonContent.substring(1, jsonContent.length() - 1);
+                }
+                
+                String[] pairs = jsonContent.split(",");
+                for (String pair : pairs) {
+                    String[] keyValue = pair.split(":");
+                    if (keyValue.length == 2) {
+                        String key = keyValue[0].trim().replaceAll("\"", "");
+                        String value = keyValue[1].trim().replaceAll("\"", "");
+                        
+                        if ("topic".equals(key)) {
+                            topicName = value;
+                        } else if ("message".equals(key)) {
+                            messageValue = value;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                sendErrorResponse(toClient, "Invalid JSON format");
+                return;
+            }
 
             // Validate input
             if (topicName == null || topicName.trim().isEmpty()) {
