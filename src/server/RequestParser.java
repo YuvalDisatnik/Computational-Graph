@@ -9,8 +9,11 @@ import java.util.*;
 public class RequestParser {
 
     public static RequestInfo parseRequest(BufferedReader reader) throws IOException {
+        System.out.println("=== inside parseRequest ===\n");
+
         /* ---------- 1. Request line ---------- */
         String start = reader.readLine();
+        System.out.println("parsing line: " + start);
         if (start == null || start.isEmpty())
             throw new IOException("Empty request");
 
@@ -45,6 +48,7 @@ public class RequestParser {
         int contentLength = 0;
         String line;
         while ((line = reader.readLine()) != null && !line.isEmpty()) {
+            System.out.println("parsing header line: " + line);
             int idx = line.indexOf(':');
             if (idx == -1) continue;
             String name  = line.substring(0, idx).trim();
@@ -53,30 +57,35 @@ public class RequestParser {
                 contentLength = Integer.parseInt(value);
         }
 
-        /* ---------- 4. Extra key=value lines (e.g. filename="…") ---------- */
-        while (reader.ready() && (line = reader.readLine()) != null && !line.isEmpty()) {
-            int eq = line.indexOf('=');
-            if (eq > 0) {
-                params.put(line.substring(0, eq).trim(),
-                        line.substring(eq + 1).trim());
-            }
-        }
-
-
-
-        /* ---------- 5. Content payload ---------- */
+        /* ---------- 4. Extra key=value lines and Content payload ---------- */
         byte[] content;
         if (!reader.ready()) {
             content = new byte[0];                 // no body
         } else {
-            String bodyLine = reader.readLine();   // קורא שורה אחת של תוכן
-            if (bodyLine == null) bodyLine = "";
-            content = (bodyLine + "\n")
-                    .getBytes(StandardCharsets.UTF_8);
+            StringBuilder bodyBuilder = new StringBuilder();
+            boolean inContent = false;
+            
+            while (reader.ready() && (line = reader.readLine()) != null) {
+                if (!inContent) {
+                    int eq = line.indexOf('=');
+                    if (eq > 0) {
+                        // This is a key=value line
+                        System.out.println("parsing extra line: " + line);
+                        params.put(line.substring(0, eq).trim(),
+                                line.substring(eq + 1).trim());
+                        continue;
+                    }
+                    // First non-key=value line, switch to content mode
+                    inContent = true;
+                }
+                // We're in content mode, add to body
+                System.out.println("parsing body line: " + line);
+                bodyBuilder.append(line).append("\n");
+            }
+            content = bodyBuilder.toString().getBytes(StandardCharsets.UTF_8);
         }
 
-
-        /* ---------- 6. Return ---------- */
+        /* ---------- 5. Return ---------- */
         return new RequestInfo(httpCommand, uriWithQuery, uriSegments, params, content);
     }
 

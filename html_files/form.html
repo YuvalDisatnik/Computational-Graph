@@ -16,7 +16,12 @@
       <div class="file-selection">
         <span id="fileName">No file chosen</span>
         <button id="chooseFileBtn">Choose File</button>
-        <input type="file" id="configFile" style="display: none" accept=".json,.txt,.conf" />
+        <input
+          type="file"
+          id="configFile"
+          style="display: none"
+          accept=".json,.txt,.conf"
+        />
         <button id="deployBtn">Deploy</button>
       </div>
       <hr style="width: 90%" />
@@ -42,9 +47,10 @@
               style="font-size: 0.7em; margin-left: -0.3em"
             ></i>
             <div class="tooltip">
-              Describe your computational graph structure using natural language.
-              The system will generate a configuration file based on your description.
-              Include information about nodes, connections, and operations.
+              Describe your computational graph structure using natural
+              language. The system will generate a configuration file based on
+              your description. Include information about nodes, connections,
+              and operations.
             </div>
           </div>
         </div>
@@ -60,7 +66,7 @@
       </div>
 
       <!-- Status Messages -->
-      <div id="statusMessages" class="status-messages" style="display: none;">
+      <div id="statusMessages" class="status-messages" style="display: none">
         <div id="statusText"></div>
       </div>
     </div>
@@ -158,145 +164,301 @@
 
     <script>
       // Initialize status display
-      function showStatus(message, type = 'info') {
-        const statusDiv = document.getElementById('statusMessages');
-        const statusText = document.getElementById('statusText');
-        
+      function showStatus(message, type = "info") {
+        const statusDiv = document.getElementById("statusMessages");
+        const statusText = document.getElementById("statusText");
+
         statusText.textContent = message;
         statusDiv.className = `status-messages status-${type}`;
-        statusDiv.style.display = 'block';
-        
+        statusDiv.style.display = "block";
+
         // Hide status after 5 seconds
         setTimeout(() => {
-          statusDiv.style.display = 'none';
+          statusDiv.style.display = "none";
         }, 5000);
       }
 
-      // Deploy button functionality
-      document.getElementById("deployBtn").addEventListener("click", function () {
-        const fileInput = document.getElementById("configFile");
-        
-        if (!fileInput.files[0]) {
-          showStatus("Please select a configuration file first.", "error");
-          return;
+      // Add logging function
+      function logToConsole(title, data) {
+        console.log(`\n${"=".repeat(20)} ${title} ${"=".repeat(20)}`);
+        if (typeof data === "object") {
+          console.log(JSON.stringify(data, null, 2));
+        } else {
+          console.log(data);
         }
-        
-        showStatus("Deploying configuration...", "info");
-        
-        // Notify parent window about deployment
-        window.parent.postMessage({ type: "deploy" }, "*");
-        
-        setTimeout(() => {
-          showStatus("Configuration deployed successfully!", "success");
-        }, 1000);
-      });
+        console.log(`${"=".repeat(50)}\n`);
+      }
+
+      // Deploy button functionality
+      document
+        .getElementById("deployBtn")
+        .addEventListener("click", function () {
+          const fileInput = document.getElementById("configFile");
+
+          if (!fileInput.files[0]) {
+            showStatus("Please select a configuration file first.", "error");
+            return;
+          }
+
+          showStatus("Deploying configuration...", "info");
+
+          // Read file content
+          const file = fileInput.files[0];
+          const reader = new FileReader();
+
+          reader.onload = function (e) {
+            const fileContent = e.target.result;
+
+            logToConsole("Deploy Request", {
+              fileName: file.name,
+              fileSize: file.size,
+              fileType: file.type,
+              content: fileContent,
+            });
+
+            // Send file content to server
+            fetch("http://127.0.0.1:8080/upload", {
+              method: "POST",
+              headers: {
+                "Content-Type": "text/plain",
+              },
+              body: fileContent,
+            })
+              .then((response) => {
+                const responseData = {
+                  status: response.status,
+                  statusText: response.statusText,
+                  headers: Object.fromEntries(response.headers.entries()),
+                };
+
+                logToConsole("Response Details", responseData);
+
+                if (response.ok) {
+                  return response.text().then((text) => {
+                    logToConsole("Response Body", text);
+                    showStatus(
+                      "Configuration deployed successfully!",
+                      "success"
+                    );
+                  });
+                } else {
+                  return response.text().then((text) => {
+                    logToConsole("Error Response", text);
+                    showStatus(
+                      "Failed to deploy configuration. Please try again.",
+                      "error"
+                    );
+                  });
+                }
+              })
+              .catch((error) => {
+                logToConsole("Network Error", error);
+                showStatus(
+                  "Network error. Please check your connection.",
+                  "error"
+                );
+              });
+          };
+
+          reader.onerror = function () {
+            logToConsole("File Read Error", "Failed to read file");
+            showStatus("Failed to read file. Please try again.", "error");
+          };
+
+          // Read file as text
+          reader.readAsText(file);
+        });
 
       // Send message functionality
       document.getElementById("sendBtn").addEventListener("click", function () {
         const topic = document.getElementById("topic").value.trim();
         const message = document.getElementById("message").value.trim();
-        
+
         if (!topic) {
           showStatus("Please enter a topic name.", "error");
           return;
         }
-        
+
         if (!message) {
           showStatus("Please enter a message.", "error");
           return;
         }
-        
+
         showStatus("Sending message...", "info");
-        
-        // Send message to backend
-        fetch('/publish', {
-          method: 'POST',
+
+        // Prepare request data
+        const requestData = {
+          topic: topic,
+          message: message,
+        };
+
+        logToConsole("Request Details", {
+          url: "/publish",
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            topic: topic,
-            message: message
-          })
-        })
-        .then(response => {
-          if (response.ok) {
-            showStatus(`Message sent to topic "${topic}" successfully!`, "success");
-            // Clear the form
-            document.getElementById("topic").value = "";
-            document.getElementById("message").value = "";
-          } else {
-            showStatus("Failed to send message. Please try again.", "error");
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          showStatus("Network error. Please check your connection.", "error");
+          body: requestData,
         });
+
+        // Send message to backend
+        fetch("/publish", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        })
+          .then((response) => {
+            const responseData = {
+              status: response.status,
+              statusText: response.statusText,
+              headers: Object.fromEntries(response.headers.entries()),
+            };
+
+            logToConsole("Response Details", responseData);
+
+            if (response.ok) {
+              return response.text().then((text) => {
+                logToConsole("Response Body", text);
+                showStatus(
+                  `Message sent to topic "${topic}" successfully!`,
+                  "success"
+                );
+                // Clear the form
+                document.getElementById("topic").value = "";
+                document.getElementById("message").value = "";
+              });
+            } else {
+              return response.text().then((text) => {
+                logToConsole("Error Response", text);
+                showStatus(
+                  "Failed to send message. Please try again.",
+                  "error"
+                );
+              });
+            }
+          })
+          .catch((error) => {
+            logToConsole("Network Error", error);
+            showStatus("Network error. Please check your connection.", "error");
+          });
       });
 
       // Generate configuration functionality
-      document.getElementById("generateBtn").addEventListener("click", function () {
-        const description = document.getElementById("graphDescription").value.trim();
-        
-        if (!description) {
-          showStatus("Please enter a description for the graph structure.", "error");
-          return;
-        }
-        
-        showStatus("Generating configuration file...", "info");
-        
-        // Send description to backend for config generation
-        fetch('/generate-config', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            description: description
+      document
+        .getElementById("generateBtn")
+        .addEventListener("click", function () {
+          const description = document
+            .getElementById("graphDescription")
+            .value.trim();
+
+          if (!description) {
+            showStatus(
+              "Please enter a description for the graph structure.",
+              "error"
+            );
+            return;
+          }
+
+          showStatus("Generating configuration file...", "info");
+
+          // Prepare request data
+          const requestData = {
+            description: description,
+          };
+
+          logToConsole("Request Details", {
+            url: "/generate-config",
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: requestData,
+          });
+
+          // Send description to backend for config generation
+          fetch("/generate-config", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestData),
           })
-        })
-        .then(response => response.blob())
-        .then(blob => {
-          // Create download link for generated config
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = url;
-          a.download = 'generated-config.json';
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-          
-          showStatus("Configuration file generated and downloaded!", "success");
-          document.getElementById("graphDescription").value = "";
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          showStatus("Failed to generate configuration. Please try again.", "error");
+            .then((response) => {
+              const responseData = {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries()),
+              };
+
+              logToConsole("Response Details", responseData);
+
+              if (!response.ok) {
+                return response.text().then((text) => {
+                  logToConsole("Error Response", text);
+                  throw new Error("Failed to generate configuration");
+                });
+              }
+              return response.blob();
+            })
+            .then((blob) => {
+              logToConsole("Response Blob", {
+                type: blob.type,
+                size: blob.size,
+              });
+
+              // Create download link for generated config
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.style.display = "none";
+              a.href = url;
+              a.download = "generated-config.json";
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+
+              showStatus(
+                "Configuration file generated and downloaded!",
+                "success"
+              );
+              document.getElementById("graphDescription").value = "";
+            })
+            .catch((error) => {
+              logToConsole("Error", error);
+              showStatus(
+                "Failed to generate configuration. Please try again.",
+                "error"
+              );
+            });
         });
-      });
 
       // Handle Enter key in input fields
-      document.getElementById("topic").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-          document.getElementById("message").focus();
-        }
-      });
+      document
+        .getElementById("topic")
+        .addEventListener("keypress", function (event) {
+          if (event.key === "Enter") {
+            document.getElementById("message").focus();
+          }
+        });
 
-      document.getElementById("message").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-          document.getElementById("sendBtn").click();
-        }
-      });
+      document
+        .getElementById("message")
+        .addEventListener("keypress", function (event) {
+          if (event.key === "Enter") {
+            document.getElementById("sendBtn").click();
+          }
+        });
 
-      document.getElementById("graphDescription").addEventListener("keydown", function(event) {
-        if (event.key === "Enter" && event.ctrlKey) {
-          event.preventDefault();
-          document.getElementById("generateBtn").click();
-        }
-      });
+      document
+        .getElementById("graphDescription")
+        .addEventListener("keydown", function (event) {
+          if (event.key === "Enter" && event.ctrlKey) {
+            event.preventDefault();
+            document.getElementById("generateBtn").click();
+          }
+        });
     </script>
     <script src="fileUpload.js"></script>
   </body>
