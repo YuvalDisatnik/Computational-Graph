@@ -9,21 +9,26 @@ import java.util.*;
 public class RequestParser {
 
     public static RequestInfo parseRequest(BufferedReader reader) throws IOException {
-        System.out.println("=== inside parseRequest ===\n");
+        System.out.println("[RequestParser] Starting request parsing");
 
         /* ---------- 1. Request line ---------- */
         String start = reader.readLine();
-        System.out.println("parsing line: " + start);
-        if (start == null || start.isEmpty())
+        if (start == null || start.isEmpty()) {
+            System.out.println("[RequestParser] Error: Empty request");
             throw new IOException("Empty request");
+        }
 
         String[] first = start.split("\\s+");
-        if (first.length < 2)
+        if (first.length < 2) {
+            System.out.println("[RequestParser] Error: Malformed request - " + start);
             throw new IOException("Malformed request line: " + start);
+        }
 
-        String httpCommand  = first[0].trim();      // GET / POST …
-        String uriWithQuery = first[1].trim();      // /api/res?id=…
+        String httpCommand  = first[0].trim();
+        String uriWithQuery = first[1].trim();
         String pathOnly     = uriWithQuery.split("\\?")[0];
+        
+        System.out.println("[RequestParser] " + httpCommand + " " + uriWithQuery);
 
         // ---------- 2. Query-string ----------
         Map<String,String> params = new HashMap<>();
@@ -48,19 +53,20 @@ public class RequestParser {
         int contentLength = 0;
         String line;
         while ((line = reader.readLine()) != null && !line.isEmpty()) {
-            System.out.println("parsing header line: " + line);
             int idx = line.indexOf(':');
             if (idx == -1) continue;
+            
             String name  = line.substring(0, idx).trim();
             String value = line.substring(idx + 1).trim();
-            if ("Content-Length".equalsIgnoreCase(name))
+            if ("Content-Length".equalsIgnoreCase(name)) {
                 contentLength = Integer.parseInt(value);
+            }
         }
 
         /* ---------- 4. Extra key=value lines and Content payload ---------- */
         byte[] content;
         if (!reader.ready()) {
-            content = new byte[0];                 // no body
+            content = new byte[0];
         } else {
             StringBuilder bodyBuilder = new StringBuilder();
             boolean inContent = false;
@@ -69,23 +75,21 @@ public class RequestParser {
                 if (!inContent) {
                     int eq = line.indexOf('=');
                     if (eq > 0) {
-                        // This is a key=value line
-                        System.out.println("parsing extra line: " + line);
-                        params.put(line.substring(0, eq).trim(),
-                                line.substring(eq + 1).trim());
+                        String key = line.substring(0, eq).trim();
+                        String value = line.substring(eq + 1).trim();
+                        params.put(key, value);
                         continue;
                     }
-                    // First non-key=value line, switch to content mode
                     inContent = true;
                 }
-                // We're in content mode, add to body
-                System.out.println("parsing body line: " + line);
                 bodyBuilder.append(line).append("\n");
             }
             content = bodyBuilder.toString().getBytes(StandardCharsets.UTF_8);
         }
 
-        /* ---------- 5. Return ---------- */
+        System.out.println("[RequestParser] Request parsed: " + httpCommand + " " + uriWithQuery + 
+                         " (params: " + params.size() + ", content: " + content.length + " bytes)");
+        
         return new RequestInfo(httpCommand, uriWithQuery, uriSegments, params, content);
     }
 

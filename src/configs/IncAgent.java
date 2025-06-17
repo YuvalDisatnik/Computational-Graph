@@ -19,6 +19,11 @@ public class IncAgent implements Agent {
         else{
             throw new IllegalArgumentException("IncAgent requires at least 1 subscriptions");
         }
+
+        // Register as publisher for output topics
+        if (pubs.length > 0) {
+            TopicManagerSingleton.get().getTopic(pubs[0]).addPublisher(this);
+        }
     }
 
     private void updateX(String topic, Message msg){

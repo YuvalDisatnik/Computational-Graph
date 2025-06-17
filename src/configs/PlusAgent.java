@@ -21,6 +21,11 @@ public class PlusAgent implements Agent {
         else{
             throw new IllegalArgumentException("PlusAgent requires at least 2 subscriptions");
         }
+
+        // Register as publisher for output topics
+        if (pubs.length > 0) {
+            TopicManagerSingleton.get().getTopic(pubs[0]).addPublisher(this);
+        }
     }
 
     private void updateX(Message msg){

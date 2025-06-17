@@ -10,6 +10,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+    <!-- Graph Data Injection Point -->
   </head>
   <body class="temp-page">
     <div class="graph-panel">
@@ -18,70 +19,179 @@
         <svg id="graphCanvas" width="100%" height="100%">
           <!-- Background pattern -->
           <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e2e8f0" stroke-width="1" opacity="0.3"/>
+            <pattern
+              id="grid"
+              width="40"
+              height="40"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M 40 0 L 0 0 0 40"
+                fill="none"
+                stroke="#e2e8f0"
+                stroke-width="1"
+                opacity="0.3"
+              />
             </pattern>
-            
+
             <!-- Animated gradient -->
-            <linearGradient id="pulseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style="stop-color:#2383c4;stop-opacity:0.1">
-                <animate attributeName="stop-opacity" values="0.1;0.3;0.1" dur="2s" repeatCount="indefinite"/>
+            <linearGradient
+              id="pulseGradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="0%"
+            >
+              <stop offset="0%" style="stop-color: #2383c4; stop-opacity: 0.1">
+                <animate
+                  attributeName="stop-opacity"
+                  values="0.1;0.3;0.1"
+                  dur="2s"
+                  repeatCount="indefinite"
+                />
               </stop>
-              <stop offset="50%" style="stop-color:#7c3aed;stop-opacity:0.2">
-                <animate attributeName="stop-opacity" values="0.2;0.4;0.2" dur="2s" repeatCount="indefinite"/>
+              <stop offset="50%" style="stop-color: #7c3aed; stop-opacity: 0.2">
+                <animate
+                  attributeName="stop-opacity"
+                  values="0.2;0.4;0.2"
+                  dur="2s"
+                  repeatCount="indefinite"
+                />
               </stop>
-              <stop offset="100%" style="stop-color:#23c483;stop-opacity:0.1">
-                <animate attributeName="stop-opacity" values="0.1;0.3;0.1" dur="2s" repeatCount="indefinite"/>
+              <stop
+                offset="100%"
+                style="stop-color: #23c483; stop-opacity: 0.1"
+              >
+                <animate
+                  attributeName="stop-opacity"
+                  values="0.1;0.3;0.1"
+                  dur="2s"
+                  repeatCount="indefinite"
+                />
               </stop>
             </linearGradient>
           </defs>
-          
+
           <!-- Grid background -->
           <rect width="100%" height="100%" fill="url(#grid)" />
-          
+
           <!-- Animated background overlay -->
           <rect width="100%" height="100%" fill="url(#pulseGradient)" />
-          
+
           <!-- Sample graph structure preview (ghosted) -->
           <g id="previewGraph" opacity="0.15">
             <!-- Topics (circles) -->
             <circle cx="150" cy="200" r="30" fill="#2383c4" />
-            <text x="150" y="205" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Topic A</text>
-            
+            <text
+              x="150"
+              y="205"
+              text-anchor="middle"
+              fill="white"
+              font-size="12"
+              font-weight="bold"
+            >
+              Topic A
+            </text>
+
             <circle cx="150" cy="300" r="30" fill="#2383c4" />
-            <text x="150" y="305" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Topic B</text>
-            
+            <text
+              x="150"
+              y="305"
+              text-anchor="middle"
+              fill="white"
+              font-size="12"
+              font-weight="bold"
+            >
+              Topic B
+            </text>
+
             <!-- Agent (rectangle) -->
-            <rect x="300" y="230" width="80" height="40" rx="20" fill="#23c483" />
-            <text x="340" y="255" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Agent</text>
-            
+            <rect
+              x="300"
+              y="230"
+              width="80"
+              height="40"
+              rx="20"
+              fill="#23c483"
+            />
+            <text
+              x="340"
+              y="255"
+              text-anchor="middle"
+              fill="white"
+              font-size="12"
+              font-weight="bold"
+            >
+              Agent
+            </text>
+
             <!-- Result (diamond) -->
             <polygon points="500,250 520,230 540,250 520,270" fill="#7c3aed" />
-            <text x="520" y="255" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Result</text>
-            
+            <text
+              x="520"
+              y="255"
+              text-anchor="middle"
+              fill="white"
+              font-size="10"
+              font-weight="bold"
+            >
+              Result
+            </text>
+
             <!-- Connections -->
-            <line x1="180" y1="200" x2="300" y2="240" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)" />
-            <line x1="180" y1="300" x2="300" y2="260" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)" />
-            <line x1="380" y1="250" x2="500" y2="250" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)" />
-            
+            <line
+              x1="180"
+              y1="200"
+              x2="300"
+              y2="240"
+              stroke="#666"
+              stroke-width="2"
+              marker-end="url(#arrowhead)"
+            />
+            <line
+              x1="180"
+              y1="300"
+              x2="300"
+              y2="260"
+              stroke="#666"
+              stroke-width="2"
+              marker-end="url(#arrowhead)"
+            />
+            <line
+              x1="380"
+              y1="250"
+              x2="500"
+              y2="250"
+              stroke="#666"
+              stroke-width="2"
+              marker-end="url(#arrowhead)"
+            />
+
             <!-- Arrow marker -->
             <defs>
-              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <marker
+                id="arrowhead"
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+              >
                 <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
               </marker>
             </defs>
           </g>
         </svg>
-        
+
         <!-- Main Loading State -->
         <div class="loading-state">
           <div class="graph-preview-container">
             <div class="graph-icon">
               <i class="fas fa-project-diagram"></i>
             </div>
-            
+
             <h2 class="graph-title">Computational Graph</h2>
-            
+
             <div class="feature-highlights">
               <div class="feature-item">
                 <i class="fas fa-circle"></i>
@@ -100,16 +210,19 @@
                 <span>Real-time</span>
               </div>
             </div>
-            
+
             <div class="status-container">
               <div class="loader"></div>
-              <p class="loading-message">Waiting for configuration deployment...</p>
+              <p class="loading-message">
+                Waiting for configuration deployment...
+              </p>
             </div>
-            
+
             <div class="instructions">
               <p>
                 <i class="fas fa-info-circle"></i>
-                Deploy a configuration file to visualize your computational graph
+                Deploy a configuration file to visualize your computational
+                graph
               </p>
             </div>
           </div>
@@ -138,8 +251,13 @@
       }
 
       @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
       }
 
       .graph-title {
@@ -221,8 +339,13 @@
       }
 
       @keyframes fadeInOut {
-        0%, 100% { opacity: 0.05; }
-        50% { opacity: 0.25; }
+        0%,
+        100% {
+          opacity: 0.05;
+        }
+        50% {
+          opacity: 0.25;
+        }
       }
 
       /* Responsive adjustments */
@@ -258,42 +381,47 @@
       }
 
       @keyframes subtlePulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.02); }
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.02);
+        }
       }
     </style>
 
     <script>
       // Add some interactive behavior
-      document.addEventListener('DOMContentLoaded', function() {
-        const featureItems = document.querySelectorAll('.feature-item');
-        
+      document.addEventListener("DOMContentLoaded", function () {
+        const featureItems = document.querySelectorAll(".feature-item");
+
         // Add staggered animation to feature items
         featureItems.forEach((item, index) => {
           item.style.animationDelay = `${index * 0.1}s`;
-          item.style.animation = 'slideInUp 0.6s ease-out forwards';
+          item.style.animation = "slideInUp 0.6s ease-out forwards";
         });
 
         // Add click interaction to feature items
-        featureItems.forEach(item => {
-          item.addEventListener('click', function() {
-            this.style.transform = 'scale(0.95)';
+        featureItems.forEach((item) => {
+          item.addEventListener("click", function () {
+            this.style.transform = "scale(0.95)";
             setTimeout(() => {
-              this.style.transform = '';
+              this.style.transform = "";
             }, 150);
           });
         });
 
         // Listen for deployment message from parent
-        window.addEventListener('message', function(event) {
-          if (event.data.type === 'deployed') {
+        window.addEventListener("message", function (event) {
+          if (event.data.type === "deployed") {
             showDeploymentTransition();
           }
         });
       });
 
       // CSS for slide in animation
-      const style = document.createElement('style');
+      const style = document.createElement("style");
       style.textContent = `
         @keyframes slideInUp {
           from {
@@ -313,22 +441,22 @@
       document.head.appendChild(style);
 
       function showDeploymentTransition() {
-        const loadingMessage = document.querySelector('.loading-message');
-        const loader = document.querySelector('.loader');
-        
+        const loadingMessage = document.querySelector(".loading-message");
+        const loader = document.querySelector(".loader");
+
         if (loadingMessage) {
-          loadingMessage.textContent = 'Loading computational graph...';
-          loadingMessage.style.color = '#23c483';
+          loadingMessage.textContent = "Loading computational graph...";
+          loadingMessage.style.color = "#23c483";
         }
-        
+
         if (loader) {
-          loader.style.setProperty('--loader-color', '#23c483');
+          loader.style.setProperty("--loader-color", "#23c483");
         }
-        
+
         // Transition to actual graph (this would normally redirect to graph_temp.html)
         setTimeout(() => {
           if (loadingMessage) {
-            loadingMessage.textContent = 'Graph loaded successfully!';
+            loadingMessage.textContent = "Graph loaded successfully!";
           }
         }, 2000);
       }
