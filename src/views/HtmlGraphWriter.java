@@ -6,65 +6,79 @@ import graph.Message;
 import graph.Topic;
 import graph.TopicManagerSingleton;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.FileWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class HtmlGraphWriter {
+    private static final Logger LOGGER = Logger.getLogger(HtmlGraphWriter.class.getName());
     
     /**
      * Writes an HTML representation of the graph to the output stream
      */
     public static void write(Graph graph, OutputStream outputStream) throws IOException {
+        LOGGER.info("Writing graph with " + (graph != null ? graph.size() : 0) + " nodes");
         String htmlContent = generateHtmlGraph(graph);
+        LOGGER.info("Generated HTML content, " + htmlContent.length() + " bytes");
         outputStream.write(htmlContent.getBytes());
         outputStream.flush();
+        LOGGER.info("HTML content written to output stream");
     }
     
     /**
      * Converts a Graph object to JSON format compatible with the graph visualization
-     * @param graph The Graph object to convert
-     * @return JSON string representation of the graph
      */
     public static String graphToJson(Graph graph) {
         if (graph == null || graph.isEmpty()) {
+            LOGGER.warning("Empty graph provided");
             return "{\"nodes\":[], \"edges\":[]}";
         }
         
+        LOGGER.info("Converting graph to JSON format");
         StringBuilder json = new StringBuilder();
         json.append("{");
         json.append("\"nodes\":[");
         
-        // Track processed nodes to avoid duplicates
         Set<String> processedNodes = new HashSet<>();
-        
-        // Get current topic manager to access real-time values
         TopicManagerSingleton.TopicManager topicManager = TopicManagerSingleton.get();
         Collection<Topic> currentTopics = topicManager.getTopics();
+        LOGGER.info("Retrieved " + currentTopics.size() + " current topics");
         
-        // Add all nodes
         boolean firstNode = true;
         for (Node node : graph) {
             if (processedNodes.contains(node.getName())) {
+                LOGGER.fine("Skipping duplicate node: " + node.getName());
                 continue;
             }
             processedNodes.add(node.getName());
             
-            if (!firstNode) {
-                json.append(",");
-            }
+            if (!firstNode) json.append(",");
             firstNode = false;
+            
+            String nodeType = getNodeType(node);
+            LOGGER.fine("Processing node: " + node.getName() + " (type: " + nodeType + ")");
             
             json.append("{");
             json.append("\"id\":\"").append(escapeJson(node.getName())).append("\",");
             json.append("\"label\":\"").append(escapeJson(getDisplayLabel(node))).append("\",");
-            json.append("\"type\":\"").append(getNodeType(node)).append("\"");
+            json.append("\"type\":\"").append(nodeType).append("\"");
             
-            // Add value - try to get real-time value for topics
             String nodeValue = getNodeValue(node, currentTopics);
             if (nodeValue != null) {
+                LOGGER.fine("Node " + node.getName() + " has value: " + nodeValue);
                 json.append(",\"value\":").append(nodeValue);
             }
             
@@ -74,15 +88,13 @@ public class HtmlGraphWriter {
         json.append("],");
         json.append("\"edges\":[");
         
-        // Add all edges
         boolean firstEdge = true;
         for (Node node : graph) {
             for (Node target : node.getEdges()) {
-                if (!firstEdge) {
-                    json.append(",");
-                }
+                if (!firstEdge) json.append(",");
                 firstEdge = false;
                 
+                LOGGER.fine("Adding edge: " + node.getName() + " -> " + target.getName());
                 json.append("{");
                 json.append("\"source\":\"").append(escapeJson(node.getName())).append("\",");
                 json.append("\"target\":\"").append(escapeJson(target.getName())).append("\"");
@@ -93,42 +105,95 @@ public class HtmlGraphWriter {
         json.append("]");
         json.append("}");
         
+        LOGGER.info("Converted graph to JSON: " + processedNodes.size() + " nodes");
         return json.toString();
     }
     
     /**
-     * Determines the type of a node based on its name prefix and characteristics
+     * Returns a list of HTML strings representing the computational graph visualization.
      */
-    private static String getNodeType(Node node) {
-        String name = node.getName();
+    public static List<String> getGraphHTML(Graph graph) {
+        LOGGER.info("Generating HTML for graph with " + (graph != null ? graph.size() : 0) + " nodes");
+        List<String> htmlLines = new ArrayList<>();
         
-        if (name.startsWith("T")) {
-            return "topic";
-        } else if (name.startsWith("A")) {
-            return "agent";
-        } else if (name.toLowerCase().contains("result") || name.toLowerCase().contains("output")) {
-            return "result";
-        } else {
-            return "topic"; // Default to topic for unknown types
+        try {
+            // Try to load from file system first
+            Path templatePath = Paths.get("html_files", "graph_temp.html");
+            LOGGER.info("Attempting to load template from: " + templatePath.toAbsolutePath());
+            
+            String templateContent;
+            if (Files.exists(templatePath)) {
+                LOGGER.info("Found template file in filesystem");
+                templateContent = Files.readString(templatePath);
+            } else {
+                // Fallback to classpath resource
+                LOGGER.info("Template not found in filesystem, trying classpath resource");
+                InputStream templateStream = HtmlGraphWriter.class.getClassLoader()
+                    .getResourceAsStream("html_files/graph_temp.html");
+                
+                if (templateStream == null) {
+                    LOGGER.severe("Template file not found in either filesystem or classpath");
+                    throw new IOException("Could not find graph_temp.html template");
+                }
+                
+                templateContent = new String(templateStream.readAllBytes());
+            }
+            
+            LOGGER.info("Successfully loaded template");
+            String graphJson = graphToJson(graph);
+            LOGGER.info("Graph converted to JSON format");
+            
+            // Replace the graph data in the template
+            String updatedContent = templateContent.replaceAll(
+                "(<script id=\"graph-data\" type=\"application/json\">)([\\s\\S]*?)(</script>)",
+                "$1\n" + graphJson + "\n$3"
+            );
+            
+            // Split the content into lines
+            htmlLines.addAll(List.of(updatedContent.split("\n")));
+            
+        } catch (IOException e) {
+            LOGGER.severe("Error loading template: " + e.getMessage());
+            htmlLines.clear();
+            htmlLines.add("<!DOCTYPE html>");
+            htmlLines.add("<html><body>");
+            htmlLines.add("<h1>Error Loading Graph</h1>");
+            htmlLines.add("<p>Failed to load graph visualization: " + e.getMessage() + "</p>");
+            htmlLines.add("</body></html>");
         }
+        
+        return htmlLines;
     }
     
-    /**
-     * Gets a display-friendly label for a node
-     */
+    private static String getNodeType(Node node) {
+        String name = node.getName();
+        String type;
+        
+        if (name.startsWith("T")) {
+            type = "topic";
+        } else if (name.startsWith("A")) {
+            type = "agent";
+        } else if (name.toLowerCase().contains("result") || name.toLowerCase().contains("output")) {
+            type = "result";
+        } else {
+            type = "topic";
+        }
+        
+        LOGGER.finest("Node " + name + " classified as type: " + type);
+        return type;
+    }
+    
     private static String getDisplayLabel(Node node) {
         String name = node.getName();
+        String label = name;
         
-        // Remove prefixes (T for topics, A for agents)
         if (name.length() > 1 && (name.startsWith("T") || name.startsWith("A"))) {
             String cleanName = name.substring(1);
             
-            // Handle common agent class names for better display
             if (cleanName.contains("Agent")) {
                 cleanName = cleanName.replace("Agent", "");
             }
             if (cleanName.contains(".")) {
-                // Handle package names like "test.PlusAgent" -> "Plus"
                 String[] parts = cleanName.split("\\.");
                 cleanName = parts[parts.length - 1];
                 if (cleanName.contains("Agent")) {
@@ -136,96 +201,86 @@ public class HtmlGraphWriter {
                 }
             }
             
-            return cleanName;
+            label = cleanName;
         }
         
-        return name;
+        LOGGER.finest("Node " + name + " display label: " + label);
+        return label;
     }
     
-    /**
-     * Extracts the current value for a node, prioritizing real-time topic data
-     */
     private static String getNodeValue(Node node, Collection<Topic> currentTopics) {
         String nodeType = getNodeType(node);
+        String value = null;
         
         if ("topic".equals(nodeType)) {
-            // For topics, try to get the real current value from TopicManager
             String topicName = getDisplayLabel(node);
-            
+            LOGGER.finest("Checking value for topic: " + topicName);
             for (Topic topic : currentTopics) {
-                if (topic.name.equals(topicName)) {
-                    // Topic found, but topics don't store values directly
-                    // They just forward messages, so check the node's message
-                    break;
-                }
+                if (topic.name.equals(topicName)) break;
             }
         }
         
-        // Fall back to node's stored message
         if (node.getMsg() != null) {
-            return getNodeValue(node.getMsg());
+            value = getNodeValue(node.getMsg());
+            LOGGER.finest("Node " + node.getName() + " has message value: " + value);
         }
         
-        // For agents, don't show a value
         if ("agent".equals(nodeType)) {
+            LOGGER.finest("Node " + node.getName() + " is an agent, no value");
             return null;
         }
         
-        // For topics without values, show a placeholder
-        return null;
+        return value;
     }
     
-    /**
-     * Extracts a numeric or string value from a message for display
-     */
     private static String getNodeValue(Message msg) {
         if (msg == null) {
+            LOGGER.finest("Message is null");
             return null;
         }
         
-        // Try to use the double value if it's not NaN
+        String value = null;
+        
         if (!Double.isNaN(msg.asDouble)) {
-            // Format nicely - avoid unnecessary decimal places
-            double value = msg.asDouble;
-            if (value == Math.floor(value)) {
-                return String.valueOf((int) value);
+            double doubleValue = msg.asDouble;
+            if (doubleValue == Math.floor(doubleValue)) {
+                value = String.valueOf((int) doubleValue);
             } else {
-                return String.valueOf(value);
+                value = String.valueOf(doubleValue);
+            }
+            LOGGER.finest("Message has double value: " + value);
+        }
+        
+        if (value == null) {
+            String text = msg.asText;
+            if (text != null && !text.trim().isEmpty()) {
+                try {
+                    Double.parseDouble(text);
+                    value = "\"" + escapeJson(text) + "\"";
+                } catch (NumberFormatException e) {
+                    value = "\"" + escapeJson(text) + "\"";
+                }
+                LOGGER.finest("Message has text value: " + value);
             }
         }
         
-        // Fall back to quoted text value if it's not just a number representation
-        String text = msg.asText;
-        if (text != null && !text.trim().isEmpty()) {
-            // Don't quote if it looks like a number that failed to parse
-            try {
-                Double.parseDouble(text);
-                return "\"" + escapeJson(text) + "\"";
-            } catch (NumberFormatException e) {
-                return "\"" + escapeJson(text) + "\"";
-            }
-        }
-        
-        return null;
+        return value;
     }
     
-    /**
-     * Escapes special characters for JSON
-     */
     private static String escapeJson(String text) {
         if (text == null) {
+            LOGGER.finest("Attempting to escape null text");
             return "";
         }
-        return text.replace("\\", "\\\\")
+        String escaped = text.replace("\\", "\\\\")
                   .replace("\"", "\\\"")
                   .replace("\n", "\\n")
                   .replace("\r", "\\r")
                   .replace("\t", "\\t");
+        LOGGER.finest("Escaped text: " + text + " -> " + escaped);
+        return escaped;
     }
     
-    /**
-     * Generates a complete HTML representation of the graph
-     */
     private static String generateHtmlGraph(Graph graph) {
         StringBuilder html = new StringBuilder();
         html.append("<!DOCTYPE html>\n");
@@ -264,7 +319,6 @@ public class HtmlGraphWriter {
         html.append("            <h1>Computational Graph</h1>\n");
         html.append("        </div>\n");
         
-        // Add graph statistics
         int topicCount = 0, agentCount = 0, resultCount = 0;
         for (Node node : graph) {
             String type = getNodeType(node);
@@ -296,7 +350,6 @@ public class HtmlGraphWriter {
         
         html.append("        <div class=\"nodes-grid\">\n");
         
-        // Get current topics for real-time values
         TopicManagerSingleton.TopicManager topicManager = TopicManagerSingleton.get();
         Collection<Topic> currentTopics = topicManager.getTopics();
         
@@ -308,14 +361,12 @@ public class HtmlGraphWriter {
             html.append("                    <span class=\"node-type type-").append(nodeType).append("\">").append(nodeType.toUpperCase()).append("</span>\n");
             html.append("                </div>\n");
             
-            // Show value if available
             String nodeValue = getNodeValue(node, currentTopics);
             if (nodeValue != null) {
-                String displayValue = nodeValue.replace("\"", ""); // Remove quotes for display
+                String displayValue = nodeValue.replace("\"", "");
                 html.append("                <div class=\"node-value\">Value: ").append(escapeHtml(displayValue)).append("</div>\n");
             }
             
-            // Show connections
             if (!node.getEdges().isEmpty()) {
                 html.append("                <div class=\"node-connections\">\n");
                 html.append("                    <strong>Connected to:</strong>\n");
@@ -339,9 +390,6 @@ public class HtmlGraphWriter {
         return html.toString();
     }
     
-    /**
-     * Escapes HTML special characters
-     */
     private static String escapeHtml(String text) {
         if (text == null) return "";
         return text.replace("&", "&amp;")
@@ -349,5 +397,28 @@ public class HtmlGraphWriter {
                   .replace(">", "&gt;")
                   .replace("\"", "&quot;")
                   .replace("'", "&#39;");
+    }
+    
+    /**
+     * Test method to write the HTML representation to a file
+     * @param graph The graph to visualize
+     * @return true if successful, false otherwise
+     */
+    public static boolean writeToTestFile(Graph graph) {
+        LOGGER.info("Writing graph visualization to test.html");
+        try {
+            List<String> htmlLines = getGraphHTML(graph);
+            LOGGER.info("Generated " + htmlLines.size() + " lines of HTML");
+            try (FileWriter writer = new FileWriter("test.html")) {
+                for (String line : htmlLines) {
+                    writer.write(line + "\n");
+                }
+            }
+            LOGGER.info("Successfully wrote to test.html");
+            return true;
+        } catch (IOException e) {
+            LOGGER.severe("Failed to write test.html: " + e.getMessage());
+            return false;
+        }
     }
 }

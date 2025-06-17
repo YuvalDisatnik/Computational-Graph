@@ -10,6 +10,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -319,27 +320,32 @@ public class ConfLoader implements Servlet {
     private void sendHtmlResponse(OutputStream toClient, Graph graph) throws IOException {
         System.out.println("[ConfLoader] Preparing HTML response");
         try {
-            System.out.println("[ConfLoader] Reading HTML template from: " + TEMP_HTML);
-            String htmlContent = Files.readString(Paths.get(TEMP_HTML));
+            // Use HtmlGraphWriter to generate the HTML
+            List<String> htmlLines = HtmlGraphWriter.getGraphHTML(graph);
             
-            System.out.println("[ConfLoader] Converting graph to JSON");
-            String graphJson = HtmlGraphWriter.graphToJson(graph);
-            htmlContent = htmlContent.replace("__GRAPH_DATA_JSON__", graphJson);
+            // Convert the list of strings to a single string
+            StringBuilder htmlContent = new StringBuilder();
+            for (String line : htmlLines) {
+                htmlContent.append(line).append("\n");
+            }
             
             System.out.println("[ConfLoader] Sending HTML response");
             String response = "HTTP/1.1 200 OK\r\n" +
                     "Content-Type: text/html; charset=UTF-8\r\n" +
-                    "Content-Length: " + htmlContent.getBytes().length + "\r\n" +
+                    "Content-Length: " + htmlContent.toString().getBytes().length + "\r\n" +
                     "Cache-Control: no-cache\r\n" +
                     "\r\n" +
-                    htmlContent;
+                    htmlContent.toString();
             
             toClient.write(response.getBytes());
             toClient.flush();
             System.out.println("[ConfLoader] HTML response sent successfully");
             
+            // For testing purposes, also write to test.html
+            HtmlGraphWriter.writeToTestFile(graph);
+            
         } catch (IOException e) {
-            System.out.println("[ConfLoader] Error reading template, using fallback HTML");
+            System.out.println("[ConfLoader] Error generating HTML, using fallback HTML");
             String fallbackHtml = generateFallbackHtml(graph);
             sendSimpleHtmlResponse(toClient, fallbackHtml);
         }
