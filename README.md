@@ -4,13 +4,14 @@ A modular simulation of a computational graph system using a publisher/subscribe
 
 ## 🌟 Features
 
-- **Interactive Web Interface** - Modern, responsive UI with iframe-based architecture
-- **Configuration Management** - Upload and manage computational graph configurations
-- **Real-time Visualization** - Dynamic graph rendering with Cytoscape.js
-- **Message Publishing** - Send messages to topics in real-time
+- **Interactive Web Interface** - Modern, responsive UI with iframe-based architecture and seamless state management
+- **Configuration Management** - Upload and manage computational graph configurations with real-time validation
+- **Real-time Visualization** - Dynamic graph rendering with Cytoscape.js and coordinated iframe updates
+- **Message Publishing** - Send messages to topics in real-time with immediate feedback
 - **AI-Powered Config Generation** - Generate configurations from natural language descriptions
-- **RESTful API** - Complete backend with servlet-based endpoints
+- **RESTful API** - Complete backend with servlet-based endpoints returning JSON responses
 - **Static File Serving** - Built-in web server for HTML/CSS/JS assets
+- **Robust Error Handling** - Comprehensive error reporting and troubleshooting guidance
 
 ## 🏗️ Architecture
 
@@ -21,15 +22,16 @@ A modular simulation of a computational graph system using a publisher/subscribe
 - **Configuration Parser** - Processes `.conf` files into executable graphs
 
 ### Frontend Components
-- **Main Interface** (`index.html`) - Iframe-based layout
-- **Configuration Panel** (`form.html`) - File upload and message publishing
-- **Graph Visualization** (`graph.html`) - Interactive graph display
-- **Results Display** (`results.html`) - Output and status information
+- **Main Interface** (`index.html`) - Iframe-based layout with coordinated updates
+- **Configuration Panel** (`form.html`) - File upload, message publishing, and config generation
+- **Graph Visualization** (`graph.html`/`graph_temp.html`) - Interactive graph display using Cytoscape.js
+- **Results Display** (`results.html`) - Real-time output and computation results
+- **Content Coordinator** (`contentSelect.js`) - Manages iframe communication and state synchronization
 
 ### Key Servlets
-- `ConfLoader` - Handles configuration uploads (`/upload`) and generation (`/generate-config`)
-- `TopicDisplayer` - Manages message publishing (`/publish`)
-- `HtmlLoader` - Serves static web assets (`/app/`)
+- `ConfLoader` - Handles configuration uploads (`/upload`) and generation (`/generate-config`) with JSON response support
+- `TopicDisplayer` - Manages message publishing (`/publish`) with real-time feedback
+- `HtmlLoader` - Serves static web assets (`/app/`) with proper MIME type handling
 
 ## 🚀 Quick Start
 
@@ -85,14 +87,27 @@ A modular simulation of a computational graph system using a publisher/subscribe
 
 ## 🔌 API Endpoints
 
-| Method | Endpoint | Description | Content-Type |
-|--------|----------|-------------|--------------|
-| `GET` | `/app/*` | Static file serving | `text/html`, `text/css`, `application/javascript` |
-| `POST` | `/upload` | Configuration file upload | `application/octet-stream` |
-| `POST` | `/publish` | Publish message to topic | `application/json` |
-| `POST` | `/generate-config` | Generate config from description | `application/json` |
+| Method | Endpoint | Description | Request Content-Type | Response Content-Type |
+|--------|----------|-------------|---------------------|----------------------|
+| `GET` | `/app/*` | Static file serving | - | `text/html`, `text/css`, `application/javascript` |
+| `POST` | `/upload` | Configuration file upload | `text/plain` | `application/json` |
+| `POST` | `/publish` | Publish message to topic | `application/json` | `application/json` |
+| `POST` | `/generate-config` | Generate config from description | `application/json` | `application/octet-stream` |
 
 ### Example API Usage
+
+**Uploading Configuration:**
+```bash
+curl -X POST http://localhost:8080/upload \
+  -H "Content-Type: text/plain" \
+  -d "test.PlusAgent
+A,B
+C
+
+test.IncAgent
+C
+RESULT"
+```
 
 **Publishing a Message:**
 ```bash
@@ -214,6 +229,40 @@ java -cp out -Dport=9090 Main
 - Server logs appear in the console
 - Browser developer tools for frontend debugging
 - Check `config_files/` for uploaded configurations
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Issue: Page reloads/resets after clicking Deploy**
+- **Cause**: This was resolved in recent updates. The deploy functionality now properly returns JSON responses instead of HTML pages.
+- **Solution**: Ensure you're using the latest version of the code.
+
+**Issue: Configuration upload fails**
+- **Cause**: Invalid configuration format or file encoding issues.
+- **Solution**: 
+  - Ensure your `.conf` file has exactly 3 lines per agent (class name, subscriptions, publications)
+  - Use UTF-8 encoding for configuration files
+  - Check the console for validation error messages
+
+**Issue: Server won't start on port 8080**
+- **Cause**: Port already in use by another application.
+- **Solution**: 
+  - Stop other applications using port 8080
+  - Or modify the port in `Main.java` and recompile
+
+**Issue: Graph visualization doesn't update**
+- **Cause**: JavaScript errors or iframe communication issues.
+- **Solution**: 
+  - Check browser developer console for errors
+  - Ensure all HTML files are served from the same domain
+  - Clear browser cache and reload
+
+**Issue: Generated config files don't download**
+- **Cause**: Browser popup blocker or CORS issues.
+- **Solution**: 
+  - Allow popups for `localhost:8080`
+  - Check browser downloads folder
 
 ## 🤝 Contributing
 
