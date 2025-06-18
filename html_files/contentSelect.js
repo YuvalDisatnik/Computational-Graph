@@ -11,8 +11,9 @@ window.addEventListener("DOMContentLoaded", () => {
   // Get reference to the form iframe
   const formFrame = document.getElementById("formFrame");
 
-  // Start with frames in their initial (undeployed) state
-  updateFramesContent(false);
+  // Check deployment state from localStorage
+  const isDeployed = localStorage.getItem("isDeployed") === "true";
+  updateFramesContent(isDeployed);
 
   // Set up event handling once the form iframe is fully loaded
   formFrame.onload = () => {
@@ -26,7 +27,8 @@ window.addEventListener("DOMContentLoaded", () => {
     // Add click handler to the deploy button if it exists
     if (deployBtn) {
       deployBtn.addEventListener("click", () => {
-        // When deploy is clicked, update all frames to their deployed state
+        // Set deployment state in localStorage
+        localStorage.setItem("isDeployed", "true");
         updateFramesContent(true);
       });
     }
@@ -44,7 +46,7 @@ function updateFramesContent(isDeployed = false) {
 
   if (isDeployed) {
     // In deployed state, show the active graph visualization
-    graphFrame.src = "graph_temp.html";
+    graphFrame.src = "generated_graph.html";
 
     // Sample graph data structure (to be replaced with actual data)
     // This represents a simple computational graph with:

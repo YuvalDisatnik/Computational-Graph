@@ -405,19 +405,44 @@ public class HtmlGraphWriter {
      * @return true if successful, false otherwise
      */
     public static boolean writeToTestFile(Graph graph) {
-        LOGGER.info("Writing graph visualization to test.html");
+        LOGGER.info("Writing graph visualization to html_files/generated_graph.html");
         try {
+            Path outputPath = Paths.get("html_files", "generated_graph.html");
+            // Log file existence before deletion
+            if (Files.exists(outputPath)) {
+                LOGGER.info("File exists before writing: " + outputPath.toAbsolutePath());
+                LOGGER.info("Deleting existing generated_graph.html before writing new content.");
+                Files.delete(outputPath);
+                LOGGER.info("File deleted: " + outputPath.toAbsolutePath());
+            } else {
+                LOGGER.info("File does not exist before writing: " + outputPath.toAbsolutePath());
+            }
             List<String> htmlLines = getGraphHTML(graph);
             LOGGER.info("Generated " + htmlLines.size() + " lines of HTML");
-            try (FileWriter writer = new FileWriter("test.html")) {
+            // Log the first 20 lines and the JSON part for debugging
+            StringBuilder preview = new StringBuilder();
+            for (int i = 0; i < Math.min(20, htmlLines.size()); i++) {
+                preview.append(htmlLines.get(i)).append("\n");
+            }
+            // Try to find and log the JSON part
+            for (String line : htmlLines) {
+                if (line.trim().startsWith("{\"nodes\"")) {
+                    LOGGER.info("Graph JSON being written: " + line);
+                    break;
+                }
+            }
+            LOGGER.info("HTML preview (first 20 lines):\n" + preview.toString());
+            try (FileWriter writer = new FileWriter(outputPath.toString())) {
+                LOGGER.info("Opened FileWriter in overwrite mode for: " + outputPath.toAbsolutePath());
                 for (String line : htmlLines) {
                     writer.write(line + "\n");
                 }
+                LOGGER.info("Finished writing all lines to file.");
             }
-            LOGGER.info("Successfully wrote to test.html");
+            LOGGER.info("Successfully wrote to html_files/generated_graph.html");
             return true;
         } catch (IOException e) {
-            LOGGER.severe("Failed to write test.html: " + e.getMessage());
+            LOGGER.severe("Failed to write html_files/generated_graph.html: " + e.getMessage());
             return false;
         }
     }

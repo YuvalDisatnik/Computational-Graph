@@ -53,59 +53,8 @@
          Your Java code should literally replace the string "__GRAPH_DATA_JSON__". 
     -->
     <script id="graph-data" type="application/json">
-      {
-        "nodes": [
-          {
-            "id": "A",
-            "label": "A",
-            "type": "topic",
-            "value": 2.0
-          },
-          {
-            "id": "B",
-            "label": "B",
-            "type": "topic",
-            "value": 3.5
-          },
-          {
-            "id": "plus",
-            "label": "plus",
-            "type": "agent"
-          },
-          {
-            "id": "C",
-            "label": "C",
-            "type": "topic",
-            "value": 5.5
-          },
-          {
-            "id": "times",
-            "label": "times",
-            "type": "agent"
-          },
-          {
-            "id": "D",
-            "label": "D",
-            "type": "topic",
-            "value": 1.0
-          },
-          {
-            "id": "result",
-            "label": "Result",
-            "type": "result",
-            "value": 5.5
-          }
-        ],
-        "edges": [
-          { "source": "A", "target": "plus" },
-          { "source": "B", "target": "plus" },
-          { "source": "plus", "target": "C" },
-          { "source": "C", "target": "times" },
-          { "source": "D", "target": "times" },
-          { "source": "times", "target": "result" }
-        ]
-      }
-    </script>
+{"nodes":[{"id":"TA","label":"A","type":"topic"},{"id":"APlusAgent","label":"Plus","type":"agent"},{"id":"TB","label":"B","type":"topic"},{"id":"TC","label":"C","type":"topic"},{"id":"AIncAgent","label":"Inc","type":"agent"},{"id":"TT","label":"T","type":"topic"},{"id":"TE","label":"E","type":"topic"},{"id":"TG","label":"G","type":"topic"},{"id":"TY","label":"Y","type":"topic"},{"id":"TZ","label":"Z","type":"topic"},{"id":"TJ","label":"J","type":"topic"}],"edges":[{"source":"TA","target":"APlusAgent"},{"source":"APlusAgent","target":"TC"},{"source":"APlusAgent","target":"TJ"},{"source":"APlusAgent","target":"TJ"},{"source":"TB","target":"APlusAgent"},{"source":"TC","target":"AIncAgent"},{"source":"AIncAgent","target":"TT"},{"source":"AIncAgent","target":"TE"},{"source":"AIncAgent","target":"TE"},{"source":"TG","target":"AIncAgent"},{"source":"TG","target":"AIncAgent"},{"source":"TY","target":"APlusAgent"},{"source":"TY","target":"APlusAgent"},{"source":"TZ","target":"APlusAgent"},{"source":"TZ","target":"APlusAgent"}]}
+</script>
 
     <!-- 5) The "renderer" script: parse the JSON and draw the graph -->
     <script>
