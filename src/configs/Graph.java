@@ -20,7 +20,9 @@ public class Graph extends ArrayList<Node>{
     }
 
     public void createFromTopics(){
+        
         TopicManager tm = TopicManagerSingleton.get();
+        
         HashMap<String, Node> nodes = new HashMap<>();
 
         for (Topic t : tm.getTopics()) {
@@ -55,6 +57,31 @@ public class Graph extends ArrayList<Node>{
                 agentNode.addEdge(topicNode);
             }
         }
+        logGraphData();
+    }
+
+    /**
+     * Logs all node names and all edges in the graph.
+     */
+    public void logGraphData() {
+        // Log all node names
+        StringBuilder nodeNamesLog = new StringBuilder("Graph nodes: [");
+        for (Node node : this) {
+            nodeNamesLog.append(node.getName()).append(", ");
+        }
+        if (this.size() > 0) nodeNamesLog.setLength(nodeNamesLog.length() - 2);
+        nodeNamesLog.append("]");
+        // Log all edges
+        StringBuilder edgesLog = new StringBuilder("Graph edges: [");
+        boolean hasEdges = false;
+        for (Node node : this) {
+            for (Node target : node.getEdges()) {
+                edgesLog.append("(").append(node.getName()).append(" -> ").append(target.getName()).append(")").append(", ");
+                hasEdges = true;
+            }
+        }
+        if (hasEdges) edgesLog.setLength(edgesLog.length() - 2);
+        edgesLog.append("]");
     }
 }
 

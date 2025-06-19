@@ -8,7 +8,7 @@ public class Main {
 
         HTTPServer server=new MyHTTPServer(8080,5);
 
-        server.addServlet("POST", "/publish", new TopicDisplayer());
+        server.addServlet("GET", "/publish", new TopicDisplayer());
         server.addServlet("POST", "/upload", new ConfLoader());
         server.addServlet("POST", "/generate-config", new ConfLoader());
         server.addServlet("GET", "/app/", new HtmlLoader("html_files"));

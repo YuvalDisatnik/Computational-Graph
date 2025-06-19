@@ -11,6 +11,9 @@ window.addEventListener("DOMContentLoaded", () => {
   // Get reference to the form iframe
   const formFrame = document.getElementById("formFrame");
 
+  // Set deployment state to false on initial load
+  localStorage.setItem("isDeployed", "false");
+
   // Check deployment state from localStorage
   const isDeployed = localStorage.getItem("isDeployed") === "true";
   updateFramesContent(isDeployed);

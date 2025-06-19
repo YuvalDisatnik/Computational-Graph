@@ -293,21 +293,21 @@
         };
 
         logToConsole("Request Details", {
-          url: "/publish",
-          method: "POST",
+          url: "http://127.0.0.1:8080/publish",
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
           body: requestData,
         });
 
-        // Send message to backend
-        fetch("/publish", {
-          method: "POST",
+        // Send message to backend using GET with query parameters
+        const params = new URLSearchParams(requestData).toString();
+        fetch(`http://127.0.0.1:8080/publish?${params}`, {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(requestData),
         })
           .then((response) => {
             const responseData = {
@@ -328,6 +328,13 @@
                 // Clear the form
                 document.getElementById("topic").value = "";
                 document.getElementById("message").value = "";
+
+                // Reload the graph iframe to show updated values
+                const graphFrame =
+                  window.parent.document.getElementById("graphFrame");
+                if (graphFrame) {
+                  graphFrame.contentWindow.location.reload();
+                }
               });
             } else {
               return response.text().then((text) => {

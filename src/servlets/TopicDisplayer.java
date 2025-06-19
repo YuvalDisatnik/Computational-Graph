@@ -15,81 +15,132 @@ public class TopicDisplayer implements Servlet {
     @Override
     public void handle(RequestInfo ri, OutputStream toClient) throws IOException {
         try {
-            // Validate HTTP method
-            if (!"POST".equalsIgnoreCase(ri.getHttpCommand())) {
-                sendErrorResponse(toClient, "Only POST method is supported");
-                return;
-            }
+            System.out.println("[TopicDisplayer] Received request: " + ri.getHttpCommand() + " " + ri.getUri());
+            if ("GET".equalsIgnoreCase(ri.getHttpCommand())) {
+                System.out.println("[TopicDisplayer] Handling GET request");
+                // Extract from query parameters
+                String topicName = ri.getParameters().get("topic");
+                String messageValue = ri.getParameters().get("message");
+                System.out.println("[TopicDisplayer] GET params - topic: " + topicName + ", message: " + messageValue);
 
-            // Extract JSON data from request body
-            byte[] contentBytes = ri.getContent();
-            String requestBody = contentBytes != null ? new String(contentBytes) : null;
-            if (requestBody == null || requestBody.trim().isEmpty()) {
-                sendErrorResponse(toClient, "Request body is required");
-                return;
-            }
-            
-            // Parse JSON manually (simple approach)
-            String topicName = null;
-            String messageValue = null;
-            
-            try {
-                // Remove curly braces and split by comma
-                String jsonContent = requestBody.trim();
-                if (jsonContent.startsWith("{") && jsonContent.endsWith("}")) {
-                    jsonContent = jsonContent.substring(1, jsonContent.length() - 1);
+                // Validate input
+                if (topicName == null || topicName.trim().isEmpty()) {
+                    System.out.println("[TopicDisplayer] Error: Topic name is required");
+                    sendErrorResponse(toClient, "Topic name is required");
+                    return;
                 }
                 
-                String[] pairs = jsonContent.split(",");
-                for (String pair : pairs) {
-                    String[] keyValue = pair.split(":");
-                    if (keyValue.length == 2) {
-                        String key = keyValue[0].trim().replaceAll("\"", "");
-                        String value = keyValue[1].trim().replaceAll("\"", "");
-                        
-                        if ("topic".equals(key)) {
-                            topicName = value;
-                        } else if ("message".equals(key)) {
-                            messageValue = value;
+                if (messageValue == null || messageValue.trim().isEmpty()) {
+                    System.out.println("[TopicDisplayer] Error: Message value is required");
+                    sendErrorResponse(toClient, "Message value is required");
+                    return;
+                }
+
+                // Get TopicManager and publish message
+                TopicManagerSingleton.TopicManager topicManager = TopicManagerSingleton.get();
+                Topic topic = topicManager.getTopic(topicName.trim());
+                Message message = new Message(messageValue.trim());
+                System.out.println("[TopicDisplayer] Publishing message to topic '" + topicName + "': " + messageValue);
+                topic.publish(message);
+
+                // Generate HTML response with topics table
+                String htmlResponse = generateHtmlResponse(topicManager.getTopics());
+                
+                // Send HTTP response
+                String httpResponse = "HTTP/1.1 200 OK\r\n" +
+                        "Content-Type: text/html; charset=UTF-8\r\n" +
+                        "Content-Length: " + htmlResponse.getBytes().length + "\r\n" +
+                        "\r\n" +
+                        htmlResponse;
+                
+                toClient.write(httpResponse.getBytes());
+                toClient.flush();
+                System.out.println("[TopicDisplayer] GET request handled successfully");
+            } else if ("POST".equalsIgnoreCase(ri.getHttpCommand())) {
+                System.out.println("[TopicDisplayer] Handling POST request");
+                // Extract JSON data from request body
+                byte[] contentBytes = ri.getContent();
+                String requestBody = contentBytes != null ? new String(contentBytes) : null;
+                System.out.println("[TopicDisplayer] POST body: " + requestBody);
+                if (requestBody == null || requestBody.trim().isEmpty()) {
+                    System.out.println("[TopicDisplayer] Error: Request body is required");
+                    sendErrorResponse(toClient, "Request body is required");
+                    return;
+                }
+                
+                // Parse JSON manually (simple approach)
+                String topicName = null;
+                String messageValue = null;
+                
+                try {
+                    // Remove curly braces and split by comma
+                    String jsonContent = requestBody.trim();
+                    if (jsonContent.startsWith("{") && jsonContent.endsWith("}")) {
+                        jsonContent = jsonContent.substring(1, jsonContent.length() - 1);
+                    }
+                    
+                    String[] pairs = jsonContent.split(",");
+                    for (String pair : pairs) {
+                        String[] keyValue = pair.split(":");
+                        if (keyValue.length == 2) {
+                            String key = keyValue[0].trim().replaceAll("\"", "");
+                            String value = keyValue[1].trim().replaceAll("\"", "");
+                            
+                            if ("topic".equals(key)) {
+                                topicName = value;
+                            } else if ("message".equals(key)) {
+                                messageValue = value;
+                            }
                         }
                     }
+                    System.out.println("[TopicDisplayer] POST parsed - topic: " + topicName + ", message: " + messageValue);
+                } catch (Exception e) {
+                    System.out.println("[TopicDisplayer] Error: Invalid JSON format");
+                    sendErrorResponse(toClient, "Invalid JSON format");
+                    return;
                 }
-            } catch (Exception e) {
-                sendErrorResponse(toClient, "Invalid JSON format");
+
+                // Validate input
+                if (topicName == null || topicName.trim().isEmpty()) {
+                    System.out.println("[TopicDisplayer] Error: Topic name is required");
+                    sendErrorResponse(toClient, "Topic name is required");
+                    return;
+                }
+                
+                if (messageValue == null || messageValue.trim().isEmpty()) {
+                    System.out.println("[TopicDisplayer] Error: Message value is required");
+                    sendErrorResponse(toClient, "Message value is required");
+                    return;
+                }
+
+                // Get TopicManager and publish message
+                TopicManagerSingleton.TopicManager topicManager = TopicManagerSingleton.get();
+                Topic topic = topicManager.getTopic(topicName.trim());
+                Message message = new Message(messageValue.trim());
+                System.out.println("[TopicDisplayer] Publishing message to topic '" + topicName + "': " + messageValue);
+                topic.publish(message);
+
+                // Generate HTML response with topics table
+                String htmlResponse = generateHtmlResponse(topicManager.getTopics());
+                
+                // Send HTTP response
+                String httpResponse = "HTTP/1.1 200 OK\r\n" +
+                        "Content-Type: text/html; charset=UTF-8\r\n" +
+                        "Content-Length: " + htmlResponse.getBytes().length + "\r\n" +
+                        "\r\n" +
+                        htmlResponse;
+                
+                toClient.write(httpResponse.getBytes());
+                toClient.flush();
+                System.out.println("[TopicDisplayer] POST request handled successfully");
+            } else {
+                System.out.println("[TopicDisplayer] Error: Unsupported HTTP method: " + ri.getHttpCommand());
+                sendErrorResponse(toClient, "Only GET or POST method is supported");
                 return;
             }
-
-            // Validate input
-            if (topicName == null || topicName.trim().isEmpty()) {
-                sendErrorResponse(toClient, "Topic name is required");
-                return;
-            }
-            
-            if (messageValue == null || messageValue.trim().isEmpty()) {
-                sendErrorResponse(toClient, "Message value is required");
-                return;
-            }
-
-            // Get TopicManager and publish message
-            TopicManagerSingleton.TopicManager topicManager = TopicManagerSingleton.get();
-            Topic topic = topicManager.getTopic(topicName.trim());
-            Message message = new Message(messageValue.trim());
-            topic.publish(message);
-
-            // Generate HTML response with topics table
-            String htmlResponse = generateHtmlResponse(topicManager.getTopics());
-            
-            // Send HTTP response
-            String httpResponse = "HTTP/1.1 200 OK\r\n" +
-                    "Content-Type: text/html; charset=UTF-8\r\n" +
-                    "Content-Length: " + htmlResponse.getBytes().length + "\r\n" +
-                    "\r\n" +
-                    htmlResponse;
-            
-            toClient.write(httpResponse.getBytes());
-            toClient.flush();
 
         } catch (Exception e) {
+            System.out.println("[TopicDisplayer] Exception: " + e.getMessage());
             sendErrorResponse(toClient, "Internal server error: " + e.getMessage());
         }
     }

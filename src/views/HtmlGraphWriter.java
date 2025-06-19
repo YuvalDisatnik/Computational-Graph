@@ -30,12 +30,12 @@ public class HtmlGraphWriter {
      * Writes an HTML representation of the graph to the output stream
      */
     public static void write(Graph graph, OutputStream outputStream) throws IOException {
-        LOGGER.info("Writing graph with " + (graph != null ? graph.size() : 0) + " nodes");
+        //        LOGGER.info("Writing graph with " + (graph != null ? graph.size() : 0) + " nodes");
         String htmlContent = generateHtmlGraph(graph);
-        LOGGER.info("Generated HTML content, " + htmlContent.length() + " bytes");
+        //        LOGGER.info("Generated HTML content, " + htmlContent.length() + " bytes");
         outputStream.write(htmlContent.getBytes());
         outputStream.flush();
-        LOGGER.info("HTML content written to output stream");
+        //        LOGGER.info("HTML content written to output stream");
     }
     
     /**
@@ -43,11 +43,11 @@ public class HtmlGraphWriter {
      */
     public static String graphToJson(Graph graph) {
         if (graph == null || graph.isEmpty()) {
-            LOGGER.warning("Empty graph provided");
+            //            LOGGER.warning("Empty graph provided");
             return "{\"nodes\":[], \"edges\":[]}";
         }
         
-        LOGGER.info("Converting graph to JSON format");
+        //            LOGGER.info("Converting graph to JSON format");
         StringBuilder json = new StringBuilder();
         json.append("{");
         json.append("\"nodes\":[");
@@ -55,12 +55,12 @@ public class HtmlGraphWriter {
         Set<String> processedNodes = new HashSet<>();
         TopicManagerSingleton.TopicManager topicManager = TopicManagerSingleton.get();
         Collection<Topic> currentTopics = topicManager.getTopics();
-        LOGGER.info("Retrieved " + currentTopics.size() + " current topics");
+        //            LOGGER.info("Retrieved " + currentTopics.size() + " current topics");
         
         boolean firstNode = true;
         for (Node node : graph) {
             if (processedNodes.contains(node.getName())) {
-                LOGGER.fine("Skipping duplicate node: " + node.getName());
+                //                LOGGER.fine("Skipping duplicate node: " + node.getName());
                 continue;
             }
             processedNodes.add(node.getName());
@@ -69,7 +69,7 @@ public class HtmlGraphWriter {
             firstNode = false;
             
             String nodeType = getNodeType(node);
-            LOGGER.fine("Processing node: " + node.getName() + " (type: " + nodeType + ")");
+            //                LOGGER.fine("Processing node: " + node.getName() + " (type: " + nodeType + ")");
             
             json.append("{");
             json.append("\"id\":\"").append(escapeJson(node.getName())).append("\",");
@@ -78,7 +78,7 @@ public class HtmlGraphWriter {
             
             String nodeValue = getNodeValue(node, currentTopics);
             if (nodeValue != null) {
-                LOGGER.fine("Node " + node.getName() + " has value: " + nodeValue);
+                LOGGER.info("[graphToJson] Node '" + node.getName() + "' (type: " + nodeType + ") value: " + nodeValue);
                 json.append(",\"value\":").append(nodeValue);
             }
             
@@ -94,7 +94,7 @@ public class HtmlGraphWriter {
                 if (!firstEdge) json.append(",");
                 firstEdge = false;
                 
-                LOGGER.fine("Adding edge: " + node.getName() + " -> " + target.getName());
+                //                    LOGGER.fine("Adding edge: " + node.getName() + " -> " + target.getName());
                 json.append("{");
                 json.append("\"source\":\"").append(escapeJson(node.getName())).append("\",");
                 json.append("\"target\":\"").append(escapeJson(target.getName())).append("\"");
@@ -105,7 +105,7 @@ public class HtmlGraphWriter {
         json.append("]");
         json.append("}");
         
-        LOGGER.info("Converted graph to JSON: " + processedNodes.size() + " nodes");
+        //            LOGGER.info("Converted graph to JSON: " + processedNodes.size() + " nodes");
         return json.toString();
     }
     
@@ -113,35 +113,35 @@ public class HtmlGraphWriter {
      * Returns a list of HTML strings representing the computational graph visualization.
      */
     public static List<String> getGraphHTML(Graph graph) {
-        LOGGER.info("Generating HTML for graph with " + (graph != null ? graph.size() : 0) + " nodes");
+        //            LOGGER.info("Generating HTML for graph with " + (graph != null ? graph.size() : 0) + " nodes");
         List<String> htmlLines = new ArrayList<>();
         
         try {
             // Try to load from file system first
             Path templatePath = Paths.get("html_files", "graph_temp.html");
-            LOGGER.info("Attempting to load template from: " + templatePath.toAbsolutePath());
+            //                LOGGER.info("Attempting to load template from: " + templatePath.toAbsolutePath());
             
             String templateContent;
             if (Files.exists(templatePath)) {
-                LOGGER.info("Found template file in filesystem");
+                //                LOGGER.info("Found template file in filesystem");
                 templateContent = Files.readString(templatePath);
             } else {
                 // Fallback to classpath resource
-                LOGGER.info("Template not found in filesystem, trying classpath resource");
+                //                LOGGER.info("Template not found in filesystem, trying classpath resource");
                 InputStream templateStream = HtmlGraphWriter.class.getClassLoader()
                     .getResourceAsStream("html_files/graph_temp.html");
                 
                 if (templateStream == null) {
-                    LOGGER.severe("Template file not found in either filesystem or classpath");
+                    //                    LOGGER.severe("Template file not found in either filesystem or classpath");
                     throw new IOException("Could not find graph_temp.html template");
                 }
                 
                 templateContent = new String(templateStream.readAllBytes());
             }
             
-            LOGGER.info("Successfully loaded template");
+            //                LOGGER.info("Successfully loaded template");
             String graphJson = graphToJson(graph);
-            LOGGER.info("Graph converted to JSON format");
+            //                LOGGER.info("Graph converted to JSON format");
             
             // Replace the graph data in the template
             String updatedContent = templateContent.replaceAll(
@@ -153,7 +153,7 @@ public class HtmlGraphWriter {
             htmlLines.addAll(List.of(updatedContent.split("\n")));
             
         } catch (IOException e) {
-            LOGGER.severe("Error loading template: " + e.getMessage());
+            //            LOGGER.severe("Error loading template: " + e.getMessage());
             htmlLines.clear();
             htmlLines.add("<!DOCTYPE html>");
             htmlLines.add("<html><body>");
@@ -179,7 +179,7 @@ public class HtmlGraphWriter {
             type = "topic";
         }
         
-        LOGGER.finest("Node " + name + " classified as type: " + type);
+        //                LOGGER.finest("Node " + name + " classified as type: " + type);
         return type;
     }
     
@@ -204,7 +204,7 @@ public class HtmlGraphWriter {
             label = cleanName;
         }
         
-        LOGGER.finest("Node " + name + " display label: " + label);
+        //                LOGGER.finest("Node " + name + " display label: " + label);
         return label;
     }
     
@@ -214,7 +214,7 @@ public class HtmlGraphWriter {
         
         if ("topic".equals(nodeType)) {
             String topicName = getDisplayLabel(node);
-            LOGGER.finest("Checking value for topic: " + topicName);
+            //                LOGGER.finest("Checking value for topic: " + topicName);
             for (Topic topic : currentTopics) {
                 if (topic.name.equals(topicName)) break;
             }
@@ -222,11 +222,11 @@ public class HtmlGraphWriter {
         
         if (node.getMsg() != null) {
             value = getNodeValue(node.getMsg());
-            LOGGER.finest("Node " + node.getName() + " has message value: " + value);
+            //                    LOGGER.finest("Node " + node.getName() + " has message value: " + value);
         }
         
         if ("agent".equals(nodeType)) {
-            LOGGER.finest("Node " + node.getName() + " is an agent, no value");
+            //                    LOGGER.finest("Node " + node.getName() + " is an agent, no value");
             return null;
         }
         
@@ -235,7 +235,7 @@ public class HtmlGraphWriter {
     
     private static String getNodeValue(Message msg) {
         if (msg == null) {
-            LOGGER.finest("Message is null");
+            //                    LOGGER.finest("Message is null");
             return null;
         }
         
@@ -248,7 +248,7 @@ public class HtmlGraphWriter {
             } else {
                 value = String.valueOf(doubleValue);
             }
-            LOGGER.finest("Message has double value: " + value);
+            //                    LOGGER.finest("Message has double value: " + value);
         }
         
         if (value == null) {
@@ -260,7 +260,7 @@ public class HtmlGraphWriter {
                 } catch (NumberFormatException e) {
                     value = "\"" + escapeJson(text) + "\"";
                 }
-                LOGGER.finest("Message has text value: " + value);
+                //                    LOGGER.finest("Message has text value: " + value);
             }
         }
         
@@ -269,7 +269,7 @@ public class HtmlGraphWriter {
     
     private static String escapeJson(String text) {
         if (text == null) {
-            LOGGER.finest("Attempting to escape null text");
+            //                    LOGGER.finest("Attempting to escape null text");
             return "";
         }
         String escaped = text.replace("\\", "\\\\")
@@ -277,7 +277,7 @@ public class HtmlGraphWriter {
                   .replace("\n", "\\n")
                   .replace("\r", "\\r")
                   .replace("\t", "\\t");
-        LOGGER.finest("Escaped text: " + text + " -> " + escaped);
+        //                    LOGGER.finest("Escaped text: " + text + " -> " + escaped);
         return escaped;
     }
     
@@ -362,8 +362,10 @@ public class HtmlGraphWriter {
             html.append("                </div>\n");
             
             String nodeValue = getNodeValue(node, currentTopics);
+            LOGGER.info("nodeValue is " + nodeValue);
             if (nodeValue != null) {
                 String displayValue = nodeValue.replace("\"", "");
+                LOGGER.info("[generateHtmlGraph] Node '" + node.getName() + "' (type: " + nodeType + ") value: " + displayValue);
                 html.append("                <div class=\"node-value\">Value: ").append(escapeHtml(displayValue)).append("</div>\n");
             }
             
@@ -405,20 +407,20 @@ public class HtmlGraphWriter {
      * @return true if successful, false otherwise
      */
     public static boolean writeToTestFile(Graph graph) {
-        LOGGER.info("Writing graph visualization to html_files/generated_graph.html");
+        //            LOGGER.info("Writing graph visualization to html_files/generated_graph.html");
         try {
             Path outputPath = Paths.get("html_files", "generated_graph.html");
             // Log file existence before deletion
             if (Files.exists(outputPath)) {
-                LOGGER.info("File exists before writing: " + outputPath.toAbsolutePath());
-                LOGGER.info("Deleting existing generated_graph.html before writing new content.");
-                Files.delete(outputPath);
-                LOGGER.info("File deleted: " + outputPath.toAbsolutePath());
+                //                    LOGGER.info("File exists before writing: " + outputPath.toAbsolutePath());
+                //                    LOGGER.info("Deleting existing generated_graph.html before writing new content.");
+                //                    Files.delete(outputPath);
+                //                    LOGGER.info("File deleted: " + outputPath.toAbsolutePath());
             } else {
-                LOGGER.info("File does not exist before writing: " + outputPath.toAbsolutePath());
+                //                    LOGGER.info("File does not exist before writing: " + outputPath.toAbsolutePath());
             }
             List<String> htmlLines = getGraphHTML(graph);
-            LOGGER.info("Generated " + htmlLines.size() + " lines of HTML");
+            //                    LOGGER.info("Generated " + htmlLines.size() + " lines of HTML");
             // Log the first 20 lines and the JSON part for debugging
             StringBuilder preview = new StringBuilder();
             for (int i = 0; i < Math.min(20, htmlLines.size()); i++) {
@@ -427,22 +429,22 @@ public class HtmlGraphWriter {
             // Try to find and log the JSON part
             for (String line : htmlLines) {
                 if (line.trim().startsWith("{\"nodes\"")) {
-                    LOGGER.info("Graph JSON being written: " + line);
+                    //                    LOGGER.info("Graph JSON being written: " + line);
                     break;
                 }
             }
-            LOGGER.info("HTML preview (first 20 lines):\n" + preview.toString());
+            //                    LOGGER.info("HTML preview (first 20 lines):\n" + preview.toString());
             try (FileWriter writer = new FileWriter(outputPath.toString())) {
-                LOGGER.info("Opened FileWriter in overwrite mode for: " + outputPath.toAbsolutePath());
+                //                    LOGGER.info("Opened FileWriter in overwrite mode for: " + outputPath.toAbsolutePath());
                 for (String line : htmlLines) {
                     writer.write(line + "\n");
                 }
-                LOGGER.info("Finished writing all lines to file.");
+                //                    LOGGER.info("Finished writing all lines to file.");
             }
-            LOGGER.info("Successfully wrote to html_files/generated_graph.html");
+            //                    LOGGER.info("Successfully wrote to html_files/generated_graph.html");
             return true;
         } catch (IOException e) {
-            LOGGER.severe("Failed to write html_files/generated_graph.html: " + e.getMessage());
+            //                    LOGGER.severe("Failed to write html_files/generated_graph.html: " + e.getMessage());
             return false;
         }
     }

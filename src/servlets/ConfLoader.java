@@ -5,6 +5,7 @@ import configs.Graph;
 import server.Servlet;
 import server.RequestParser.RequestInfo;
 import views.HtmlGraphWriter;
+import graph.TopicManagerSingleton;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -97,6 +98,8 @@ public class ConfLoader implements Servlet {
             Files.write(filePath, fileContent.getBytes());
             System.out.println("[ConfLoader] File saved successfully");
             // Process the configuration file
+            System.out.println("[ConfLoader] Clearing TopicManager");
+            TopicManagerSingleton.get().clear();
             System.out.println("[ConfLoader] Creating GenericConfig");
             GenericConfig config = new GenericConfig();
             System.out.println("[ConfLoader] Setting configuration file: " + filePath);
@@ -105,10 +108,15 @@ public class ConfLoader implements Servlet {
             config.create();
             System.out.println("[ConfLoader] Configuration created successfully");
 
-            // Generate a graph representation from the topic connections
-            System.out.println("[ConfLoader] Generating graph from topics");
+            // Print graph data before creation
+            GenericConfig.logGraphData(null); // Before creating the graph
+            System.out.println("Before creating the graph");
             Graph graph = new Graph();
+            System.out.println("After creating the graph");
+            GenericConfig.logGraphData(graph); // After creating the graph
             graph.createFromTopics();
+            System.out.println("After create from topics");
+            GenericConfig.logGraphData(graph); // After creating the graph
             System.out.println("[ConfLoader] Graph created successfully");
 
             // Check if we should return JSON or HTML
