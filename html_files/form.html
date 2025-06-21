@@ -325,15 +325,19 @@
                   `Message sent to topic "${topic}" successfully!`,
                   "success"
                 );
-                // Clear the form
                 document.getElementById("topic").value = "";
                 document.getElementById("message").value = "";
 
-                // Reload the graph iframe to show updated values
-                const graphFrame =
-                  window.parent.document.getElementById("graphFrame");
+                // Reload the graph and results iframes to show updated values
+                const parentDoc = window.parent.document;
+                const graphFrame = parentDoc.getElementById("graphFrame");
+                const outputFrame = parentDoc.getElementById("outputFrame");
+
                 if (graphFrame) {
                   graphFrame.contentWindow.location.reload();
+                }
+                if (outputFrame) {
+                  outputFrame.contentWindow.location.reload();
                 }
               });
             } else {

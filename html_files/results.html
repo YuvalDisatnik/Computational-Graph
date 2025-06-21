@@ -20,12 +20,6 @@
           <div class="topics-results">
             <!-- Will be populated dynamically -->
           </div>
-
-          <!-- Final Result Section -->
-          <div class="section-title">Final Result</div>
-          <div class="final-result">
-            <!-- Will be populated dynamically -->
-          </div>
         </div>
       </div>
     </div>
@@ -50,19 +44,6 @@
         return topicItem;
       }
 
-      function createResultItem(resultValue = 5.5) {
-        // Default placeholder value
-        const resultItem = document.createElement("div");
-        resultItem.className = "result-item";
-
-        const dataDiv = document.createElement("div");
-        dataDiv.className = "result-data";
-        dataDiv.innerHTML = `Final Value: ${resultValue}`;
-
-        resultItem.appendChild(dataDiv);
-        return resultItem;
-      }
-
       // Listen for data updates from parent frame
       window.addEventListener("message", (event) => {
         if (event.data.type === "updateResults") {
@@ -76,9 +57,7 @@
 
             // Clear existing content
             const topicsResults = document.querySelector(".topics-results");
-            const finalResult = document.querySelector(".final-result");
             topicsResults.innerHTML = "";
-            finalResult.innerHTML = "";
 
             // Update topics data
             const topics = data.nodes.filter((node) => node.type === "topic");
@@ -86,15 +65,6 @@
               const topicItem = createTopicItem(topic);
               topicsResults.appendChild(topicItem);
             });
-
-            // Update final result with placeholder value if no result node exists
-            const resultNode = data.nodes.find(
-              (node) => node.type === "result"
-            );
-            const resultItem = createResultItem(
-              resultNode ? resultNode.value : 5.5
-            );
-            finalResult.appendChild(resultItem);
           } else {
             // Show loading state
             document.querySelector(".loading-state").classList.remove("hidden");

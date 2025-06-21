@@ -129,6 +129,16 @@ public class MyHTTPServer extends Thread implements HTTPServer {
             RequestParser.RequestInfo requestInfo = RequestParser.parseRequest(input);
             String httpCommand = requestInfo.getHttpCommand();
 
+            // Handle OPTIONS request for CORS preflight
+            if (httpCommand.equalsIgnoreCase("OPTIONS")) {
+                client.getOutputStream().write("HTTP/1.1 204 No Content\r\n".getBytes());
+                client.getOutputStream().write("Access-Control-Allow-Origin: *\r\n".getBytes());
+                client.getOutputStream().write("Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE\r\n".getBytes());
+                client.getOutputStream().write("Access-Control-Allow-Headers: Content-Type\r\n".getBytes());
+                client.getOutputStream().write("\r\n".getBytes());
+                return;
+            }
+
             // Determine the appropriate servlet based on the longest URI match
             Map<String, Servlet> servletMap;
             switch (httpCommand.toUpperCase()) {

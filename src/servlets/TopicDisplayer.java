@@ -9,143 +9,50 @@ import server.RequestParser.RequestInfo;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.Map;
 
 public class TopicDisplayer implements Servlet {
 
     @Override
     public void handle(RequestInfo ri, OutputStream toClient) throws IOException {
-        try {
-            System.out.println("[TopicDisplayer] Received request: " + ri.getHttpCommand() + " " + ri.getUri());
-            if ("GET".equalsIgnoreCase(ri.getHttpCommand())) {
-                System.out.println("[TopicDisplayer] Handling GET request");
-                // Extract from query parameters
-                String topicName = ri.getParameters().get("topic");
-                String messageValue = ri.getParameters().get("message");
-                System.out.println("[TopicDisplayer] GET params - topic: " + topicName + ", message: " + messageValue);
+        String corsHeaders = "Access-Control-Allow-Origin: *\r\n";
 
-                // Validate input
-                if (topicName == null || topicName.trim().isEmpty()) {
-                    System.out.println("[TopicDisplayer] Error: Topic name is required");
-                    sendErrorResponse(toClient, "Topic name is required");
-                    return;
-                }
-                
-                if (messageValue == null || messageValue.trim().isEmpty()) {
-                    System.out.println("[TopicDisplayer] Error: Message value is required");
-                    sendErrorResponse(toClient, "Message value is required");
-                    return;
-                }
+        Map<String, String> params = ri.getParameters();
+        String topic = params.get("topic");
+        String message = params.get("message");
 
-                // Get TopicManager and publish message
-                TopicManagerSingleton.TopicManager topicManager = TopicManagerSingleton.get();
-                Topic topic = topicManager.getTopic(topicName.trim());
-                Message message = new Message(messageValue.trim());
-                System.out.println("[TopicDisplayer] Publishing message to topic '" + topicName + "': " + messageValue);
-                topic.publish(message);
+        if (topic != null && !topic.isEmpty() && message != null && !message.isEmpty()) {
+            // If topic and message are provided, publish the message
+            try {
+                double msgValue = Double.parseDouble(message);
+                TopicManagerSingleton.get().getTopic(topic).publish(new Message(msgValue));
 
-                // Generate HTML response with topics table
-                String htmlResponse = generateHtmlResponse(topicManager.getTopics());
-                
-                // Send HTTP response
-                String httpResponse = "HTTP/1.1 200 OK\r\n" +
-                        "Content-Type: text/html; charset=UTF-8\r\n" +
-                        "Content-Length: " + htmlResponse.getBytes().length + "\r\n" +
-                        "\r\n" +
-                        htmlResponse;
-                
-                toClient.write(httpResponse.getBytes());
-                toClient.flush();
-                System.out.println("[TopicDisplayer] GET request handled successfully");
-            } else if ("POST".equalsIgnoreCase(ri.getHttpCommand())) {
-                System.out.println("[TopicDisplayer] Handling POST request");
-                // Extract JSON data from request body
-                byte[] contentBytes = ri.getContent();
-                String requestBody = contentBytes != null ? new String(contentBytes) : null;
-                System.out.println("[TopicDisplayer] POST body: " + requestBody);
-                if (requestBody == null || requestBody.trim().isEmpty()) {
-                    System.out.println("[TopicDisplayer] Error: Request body is required");
-                    sendErrorResponse(toClient, "Request body is required");
-                    return;
-                }
-                
-                // Parse JSON manually (simple approach)
-                String topicName = null;
-                String messageValue = null;
-                
-                try {
-                    // Remove curly braces and split by comma
-                    String jsonContent = requestBody.trim();
-                    if (jsonContent.startsWith("{") && jsonContent.endsWith("}")) {
-                        jsonContent = jsonContent.substring(1, jsonContent.length() - 1);
-                    }
-                    
-                    String[] pairs = jsonContent.split(",");
-                    for (String pair : pairs) {
-                        String[] keyValue = pair.split(":");
-                        if (keyValue.length == 2) {
-                            String key = keyValue[0].trim().replaceAll("\"", "");
-                            String value = keyValue[1].trim().replaceAll("\"", "");
-                            
-                            if ("topic".equals(key)) {
-                                topicName = value;
-                            } else if ("message".equals(key)) {
-                                messageValue = value;
-                            }
-                        }
-                    }
-                    System.out.println("[TopicDisplayer] POST parsed - topic: " + topicName + ", message: " + messageValue);
-                } catch (Exception e) {
-                    System.out.println("[TopicDisplayer] Error: Invalid JSON format");
-                    sendErrorResponse(toClient, "Invalid JSON format");
-                    return;
-                }
-
-                // Validate input
-                if (topicName == null || topicName.trim().isEmpty()) {
-                    System.out.println("[TopicDisplayer] Error: Topic name is required");
-                    sendErrorResponse(toClient, "Topic name is required");
-                    return;
-                }
-                
-                if (messageValue == null || messageValue.trim().isEmpty()) {
-                    System.out.println("[TopicDisplayer] Error: Message value is required");
-                    sendErrorResponse(toClient, "Message value is required");
-                    return;
-                }
-
-                // Get TopicManager and publish message
-                TopicManagerSingleton.TopicManager topicManager = TopicManagerSingleton.get();
-                Topic topic = topicManager.getTopic(topicName.trim());
-                Message message = new Message(messageValue.trim());
-                System.out.println("[TopicDisplayer] Publishing message to topic '" + topicName + "': " + messageValue);
-                topic.publish(message);
-
-                // Generate HTML response with topics table
-                String htmlResponse = generateHtmlResponse(topicManager.getTopics());
-                
-                // Send HTTP response
-                String httpResponse = "HTTP/1.1 200 OK\r\n" +
-                        "Content-Type: text/html; charset=UTF-8\r\n" +
-                        "Content-Length: " + htmlResponse.getBytes().length + "\r\n" +
-                        "\r\n" +
-                        htmlResponse;
-                
-                toClient.write(httpResponse.getBytes());
-                toClient.flush();
-                System.out.println("[TopicDisplayer] POST request handled successfully");
-            } else {
-                System.out.println("[TopicDisplayer] Error: Unsupported HTTP method: " + ri.getHttpCommand());
-                sendErrorResponse(toClient, "Only GET or POST method is supported");
-                return;
+                String response = "HTTP/1.1 200 OK\r\n" +
+                                  corsHeaders +
+                                  "Content-Type: text/plain\r\n" +
+                                  "\r\n" +
+                                  "Message published successfully.";
+                toClient.write(response.getBytes());
+            } catch (NumberFormatException e) {
+                String errorResponse = "HTTP/1.1 400 Bad Request\r\n" +
+                                       corsHeaders +
+                                       "Content-Type: text/plain\r\n" +
+                                       "\r\n" +
+                                       "Invalid message format. Must be a number.";
+                toClient.write(errorResponse.getBytes());
             }
-
-        } catch (Exception e) {
-            System.out.println("[TopicDisplayer] Exception: " + e.getMessage());
-            sendErrorResponse(toClient, "Internal server error: " + e.getMessage());
+        } else {
+            // Otherwise, display the topics
+            String response = "HTTP/1.1 200 OK\r\n" +
+                              corsHeaders +
+                              "Content-Type: text/html\r\n" +
+                              "\r\n" +
+                              getTopicsHtml();
+            toClient.write(response.getBytes());
         }
     }
 
-    private String generateHtmlResponse(Collection<Topic> topics) {
+    private String getTopicsHtml() {
         StringBuilder html = new StringBuilder();
         html.append("<!DOCTYPE html>\n");
         html.append("<html lang=\"en\">\n");
@@ -174,6 +81,7 @@ public class TopicDisplayer implements Servlet {
         html.append("        </thead>\n");
         html.append("        <tbody>\n");
 
+        Collection<Topic> topics = TopicManagerSingleton.get().getTopics();
         if (topics.isEmpty()) {
             html.append("            <tr>\n");
             html.append("                <td colspan=\"2\" class=\"no-data\">No topics available</td>\n");
@@ -210,21 +118,6 @@ public class TopicDisplayer implements Servlet {
                   .replace(">", "&gt;")
                   .replace("\"", "&quot;")
                   .replace("'", "&#39;");
-    }
-
-    private void sendErrorResponse(OutputStream toClient, String errorMessage) throws IOException {
-        String htmlError = "<!DOCTYPE html>\n" +
-                "<html><head><title>Error</title></head>\n" +
-                "<body><h1>Error</h1><p>" + escapeHtml(errorMessage) + "</p></body></html>";
-        
-        String httpResponse = "HTTP/1.1 400 Bad Request\r\n" +
-                "Content-Type: text/html; charset=UTF-8\r\n" +
-                "Content-Length: " + htmlError.getBytes().length + "\r\n" +
-                "\r\n" +
-                htmlError;
-        
-        toClient.write(httpResponse.getBytes());
-        toClient.flush();
     }
 
     @Override

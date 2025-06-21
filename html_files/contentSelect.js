@@ -48,48 +48,56 @@ function updateFramesContent(isDeployed = false) {
   const outputFrame = document.getElementById("outputFrame");
 
   if (isDeployed) {
-    // In deployed state, show the active graph visualization
-    graphFrame.src = "generated_graph.html";
+    // In deployed state, show a temporary page first
+    graphFrame.src = "temp.html";
 
-    // Sample graph data structure (to be replaced with actual data)
-    // This represents a simple computational graph with:
-    // - Two input nodes (A=2.0, B=3.5)
-    // - A plus agent that adds A and B to produce C (5.5)
-    // - A times agent with inputs C and D (1.0)
-    const graphData = {
-      nodes: [
-        { id: "A", label: "A", type: "topic", value: 2.0 },
-        { id: "B", label: "B", type: "topic", value: 3.5 },
-        { id: "plus", label: "plus", type: "agent" },
-        { id: "C", label: "C", type: "topic", value: 5.5 }, // Result of A + B
-        { id: "times", label: "times", type: "agent" },
-        { id: "D", label: "D", type: "topic", value: 1.0 },
-      ],
-      edges: [
-        { source: "A", target: "plus" },
-        { source: "B", target: "plus" },
-        { source: "plus", target: "C" },
-        { source: "C", target: "times" },
-        { source: "D", target: "times" },
-      ],
-    };
-
-    // Add a small delay to ensure frames are ready before sending data
+    // Add a delay (e.g., 2000ms) before loading the main content
     setTimeout(() => {
-      // Load the results page
-      outputFrame.src = "results.html";
+      // After delay, show the active graph visualization
+      graphFrame.src = "generated_graph.html";
 
-      // Once results page is loaded, send the graph data
-      outputFrame.onload = () => {
-        outputFrame.contentWindow.postMessage(
-          {
-            type: "updateResults",
-            data: graphData,
-          },
-          "*" // Allow cross-origin communication between frames
-        );
-      };
-    }, 100);
+      // Fetch graph data from the server
+      fetch("/graph-data")
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Graph data not available yet.");
+          }
+          return response.json();
+        })
+        .then((graphData) => {
+          // Load the results page
+          outputFrame.src = "results.html";
+
+          // Once results page is loaded, send the graph data
+          outputFrame.onload = () => {
+            if (outputFrame.contentWindow) {
+              outputFrame.contentWindow.postMessage(
+                {
+                  type: "updateResults",
+                  data: graphData,
+                },
+                "*" // Allow cross-origin communication between frames
+              );
+            }
+          };
+        })
+        .catch((error) => {
+          console.error("Error fetching graph data:", error);
+          // Handle error, e.g., show a message in the output frame
+          outputFrame.src = "results.html";
+          outputFrame.onload = () => {
+            if (outputFrame.contentWindow) {
+              outputFrame.contentWindow.postMessage(
+                {
+                  type: "updateResults",
+                  data: null, // or some error indicator
+                },
+                "*"
+              );
+            }
+          };
+        });
+    }, 2000); // 2-second delay
   } else {
     // In undeployed state, show the initial placeholder pages
     graphFrame.src = "graph.html";

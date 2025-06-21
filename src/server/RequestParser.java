@@ -9,7 +9,7 @@ import java.util.*;
 public class RequestParser {
 
     public static RequestInfo parseRequest(BufferedReader reader) throws IOException {
-        System.out.println("[RequestParser] Starting request parsing");
+        //System.out.println("[RequestParser] Starting request parsing");
 
         /* ---------- 1. Request line ---------- */
         String start = reader.readLine();
@@ -28,7 +28,7 @@ public class RequestParser {
         String uriWithQuery = first[1].trim();
         String pathOnly     = uriWithQuery.split("\\?")[0];
         
-        System.out.println("[RequestParser] " + httpCommand + " " + uriWithQuery);
+        //System.out.println("[RequestParser] " + httpCommand + " " + uriWithQuery);
 
         // ---------- 2. Query-string ----------
         Map<String,String> params = new HashMap<>();
@@ -87,8 +87,8 @@ public class RequestParser {
             content = bodyBuilder.toString().getBytes(StandardCharsets.UTF_8);
         }
 
-        System.out.println("[RequestParser] Request parsed: " + httpCommand + " " + uriWithQuery + 
-                         " (params: " + params.size() + ", content: " + content.length + " bytes)");
+        //System.out.println("[RequestParser] Request parsed: " + httpCommand + " " + uriWithQuery + 
+          //               " (params: " + params.size() + ", content: " + content.length + " bytes)");
         
         return new RequestInfo(httpCommand, uriWithQuery, uriSegments, params, content);
     }

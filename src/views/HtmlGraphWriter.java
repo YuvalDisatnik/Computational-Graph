@@ -211,25 +211,28 @@ public class HtmlGraphWriter {
     private static String getNodeValue(Node node, Collection<Topic> currentTopics) {
         String nodeType = getNodeType(node);
         String value = null;
-        
-        if ("topic".equals(nodeType)) {
+
+        if ("topic".equals(nodeType) || "result".equals(nodeType)) {
             String topicName = getDisplayLabel(node);
-            //                LOGGER.finest("Checking value for topic: " + topicName);
             for (Topic topic : currentTopics) {
-                if (topic.name.equals(topicName)) break;
+                if (topic.name.equals(topicName)) {
+                    Message lastMessage = topic.getLastMessage();
+                    if (lastMessage != null) {
+                        value = getNodeValue(lastMessage);
+                    }
+                    break;
+                }
             }
         }
-        
-        if (node.getMsg() != null) {
+
+        if (value == null && node.getMsg() != null) {
             value = getNodeValue(node.getMsg());
-            //                    LOGGER.finest("Node " + node.getName() + " has message value: " + value);
         }
-        
+
         if ("agent".equals(nodeType)) {
-            //                    LOGGER.finest("Node " + node.getName() + " is an agent, no value");
             return null;
         }
-        
+
         return value;
     }
     

@@ -25,6 +25,8 @@ import java.util.Map;
  * 6. Returns an HTML response with the graph visualization
  */
 public class ConfLoader implements Servlet {
+    private static Graph lastGraph = null;
+
     /** Directory where uploaded configuration files are stored */
     private static final String UPLOAD_DIR = "config_files";
     /** Path to the HTML template used for graph visualization */
@@ -32,6 +34,18 @@ public class ConfLoader implements Servlet {
 
     @Override
     public void handle(RequestInfo ri, OutputStream toClient) throws IOException {
+        // CORS headers
+        String corsHeaders = "Access-Control-Allow-Origin: *\r\n";
+
+        if ("GET".equalsIgnoreCase(ri.getHttpCommand())) {
+            if ("/graph-data".equals(ri.getUri())) {
+                handleGetGraphData(toClient, corsHeaders);
+            } else {
+                sendErrorResponse(toClient, 405, "Method Not Allowed", "Only POST and GET /graph-data are supported", corsHeaders);
+            }
+            return;
+        }
+
         try {
             System.out.println("[ConfLoader] Starting request handling");
             System.out.println("[ConfLoader] HTTP Command: " + ri.getHttpCommand());
@@ -40,7 +54,7 @@ public class ConfLoader implements Servlet {
             // Only handle POST requests
             if (!"POST".equalsIgnoreCase(ri.getHttpCommand())) {
                 System.out.println("[ConfLoader] Error: Invalid HTTP method - " + ri.getHttpCommand());
-                sendErrorResponse(toClient, 405, "Method Not Allowed", "Only POST method is supported");
+                sendErrorResponse(toClient, 405, "Method Not Allowed", "Only POST method is supported", corsHeaders);
                 return;
             }
 
@@ -49,7 +63,7 @@ public class ConfLoader implements Servlet {
             System.out.println("[ConfLoader] Processing URI: " + uri);
             if ("/generate-config".equals(uri)) {
                 System.out.println("[ConfLoader] Handling generate-config endpoint");
-                handleGenerateConfig(ri, toClient);
+                handleGenerateConfig(ri, toClient, corsHeaders);
                 return;
             }
             // Try to get filename from parameters (for simple uploads)
@@ -64,13 +78,13 @@ public class ConfLoader implements Servlet {
                 System.out.println("[ConfLoader] Content preview: " + fileContent.substring(0, Math.min(100, fileContent.length())) + "...");
             } else {
                 System.out.println("[ConfLoader] Error: No content received");
-                sendErrorResponse(toClient, 400, "Bad Request", "No file content received. Please upload a configuration file.");
+                sendErrorResponse(toClient, 400, "Bad Request", "No file content received. Please upload a configuration file.", corsHeaders);
                 return;
             }
 
             if (fileContent.isEmpty()) {
                 System.out.println("[ConfLoader] Error: Empty file content");
-                sendErrorResponse(toClient, 400, "Bad Request", "Empty file content. Please upload a valid configuration file.");
+                sendErrorResponse(toClient, 400, "Bad Request", "Empty file content. Please upload a valid configuration file.", corsHeaders);
                 return;
             }
 
@@ -79,7 +93,7 @@ public class ConfLoader implements Servlet {
             if (!isValidConfigFormat(fileContent)) {
                 System.out.println("[ConfLoader] Error: Invalid configuration format");
                 sendErrorResponse(toClient, 400, "Bad Request", 
-                    "Invalid configuration format. Expected format: each agent should have 3 lines (class name, subscriptions, publications).");
+                    "Invalid configuration format. Expected format: each agent should have 3 lines (class name, subscriptions, publications).", corsHeaders);
                 return;
             }
             System.out.println("[ConfLoader] Configuration format is valid");
@@ -117,6 +131,7 @@ public class ConfLoader implements Servlet {
             graph.createFromTopics();
             System.out.println("After create from topics");
             GenericConfig.logGraphData(graph); // After creating the graph
+            lastGraph = graph;
             System.out.println("[ConfLoader] Graph created successfully");
 
             // Check if we should return JSON or HTML
@@ -125,28 +140,41 @@ public class ConfLoader implements Servlet {
             if ("application/json".equals(acceptHeader)) {
                 System.out.println("[ConfLoader] Sending JSON response");
                 String graphJson = HtmlGraphWriter.graphToJson(graph);
-                sendJsonResponse(toClient, graphJson);
+                sendJsonResponse(toClient, graphJson, corsHeaders);
             } else {
                 System.out.println("[ConfLoader] Sending HTML response");
-                sendHtmlResponse(toClient, graph);
+                sendHtmlResponse(toClient, graph, corsHeaders);
             }
             System.out.println("[ConfLoader] Response sent successfully");
 
         } catch (IllegalArgumentException e) {
             System.out.println("[ConfLoader] Configuration error: " + e.getMessage());
             e.printStackTrace();
-            sendErrorResponse(toClient, 400, "Bad Request", "Configuration error: " + e.getMessage());
+            sendErrorResponse(toClient, 400, "Bad Request", "Configuration error: " + e.getMessage(), corsHeaders);
         } catch (Exception e) {
             System.out.println("[ConfLoader] Unexpected error: " + e.getMessage());
             e.printStackTrace();
-            sendErrorResponse(toClient, 500, "Internal Server Error", "Error processing configuration: " + e.getMessage());
+            sendErrorResponse(toClient, 500, "Internal Server Error", "Error processing configuration: " + e.getMessage(), corsHeaders);
         }
+    }
+
+    private void handleGetGraphData(OutputStream toClient, String corsHeaders) throws IOException {
+        if (lastGraph == null) {
+            sendErrorResponse(toClient, 404, "Not Found", "Graph not available. Please upload a config file first.", corsHeaders);
+            return;
+        }
+        String graphJson = HtmlGraphWriter.graphToJson(lastGraph);
+        sendJsonResponse(toClient, graphJson, corsHeaders);
+    }
+
+    public static Graph getLastGraph() {
+        return lastGraph;
     }
 
     /**
      * Handles the /generate-config endpoint
      */
-    private void handleGenerateConfig(RequestInfo ri, OutputStream toClient) throws IOException {
+    private void handleGenerateConfig(RequestInfo ri, OutputStream toClient, String corsHeaders) throws IOException {
         try {
             System.out.println("[ConfLoader] Starting generate-config handling");
             byte[] contentBytes = ri.getContent();
@@ -156,7 +184,7 @@ public class ConfLoader implements Servlet {
             
             if (requestBody == null || requestBody.trim().isEmpty()) {
                 System.out.println("[ConfLoader] Error: Empty request body");
-                sendErrorResponse(toClient, 400, "Bad Request", "Request body is required");
+                sendErrorResponse(toClient, 400, "Bad Request", "Request body is required", corsHeaders);
                 return;
             }
 
@@ -165,7 +193,7 @@ public class ConfLoader implements Servlet {
 
             if (description == null || description.trim().isEmpty()) {
                 System.out.println("[ConfLoader] Error: Empty description");
-                sendErrorResponse(toClient, 400, "Bad Request", "Description is required");
+                sendErrorResponse(toClient, 400, "Bad Request", "Description is required", corsHeaders);
                 return;
             }
 
@@ -174,13 +202,13 @@ public class ConfLoader implements Servlet {
             System.out.println("[ConfLoader] Generated config:\n" + generatedConfig);
             
             System.out.println("[ConfLoader] Sending config file response");
-            sendConfigFileResponse(toClient, generatedConfig);
+            sendConfigFileResponse(toClient, generatedConfig, corsHeaders);
             System.out.println("[ConfLoader] Config file sent successfully");
             
         } catch (Exception e) {
             System.out.println("[ConfLoader] Error in generate-config: " + e.getMessage());
             e.printStackTrace();
-            sendErrorResponse(toClient, 500, "Internal Server Error", "Error generating configuration: " + e.getMessage());
+            sendErrorResponse(toClient, 500, "Internal Server Error", "Error generating configuration: " + e.getMessage(), corsHeaders);
         }
     }
 
@@ -262,12 +290,13 @@ public class ConfLoader implements Servlet {
     /**
      * Sends a configuration file as download response
      */
-    private void sendConfigFileResponse(OutputStream toClient, String configContent) throws IOException {
+    private void sendConfigFileResponse(OutputStream toClient, String configContent, String corsHeaders) throws IOException {
         System.out.println("[ConfLoader] Preparing config file response");
         String filename = "generated-config-" + System.currentTimeMillis() + ".conf";
         System.out.println("[ConfLoader] Using filename: " + filename);
         
         String response = "HTTP/1.1 200 OK\r\n" +
+                corsHeaders +
                 "Content-Type: application/octet-stream\r\n" +
                 "Content-Disposition: attachment; filename=\"" + filename + "\"\r\n" +
                 "Content-Length: " + configContent.getBytes().length + "\r\n" +
@@ -325,7 +354,7 @@ public class ConfLoader implements Servlet {
     /**
      * Sends an HTML response with the graph visualization
      */
-    private void sendHtmlResponse(OutputStream toClient, Graph graph) throws IOException {
+    private void sendHtmlResponse(OutputStream toClient, Graph graph, String corsHeaders) throws IOException {
         System.out.println("[ConfLoader] Preparing HTML response");
         try {
             // Use HtmlGraphWriter to generate the HTML
@@ -339,6 +368,7 @@ public class ConfLoader implements Servlet {
             
             System.out.println("[ConfLoader] Sending HTML response");
             String response = "HTTP/1.1 200 OK\r\n" +
+                    corsHeaders +
                     "Content-Type: text/html; charset=UTF-8\r\n" +
                     "Content-Length: " + htmlContent.toString().getBytes().length + "\r\n" +
                     "Cache-Control: no-cache\r\n" +
@@ -355,16 +385,17 @@ public class ConfLoader implements Servlet {
         } catch (IOException e) {
             System.out.println("[ConfLoader] Error generating HTML, using fallback HTML");
             String fallbackHtml = generateFallbackHtml(graph);
-            sendSimpleHtmlResponse(toClient, fallbackHtml);
+            sendSimpleHtmlResponse(toClient, fallbackHtml, corsHeaders);
         }
     }
 
     /**
      * Sends a JSON response with the graph data
      */
-    private void sendJsonResponse(OutputStream toClient, String jsonData) throws IOException {
+    private void sendJsonResponse(OutputStream toClient, String jsonData, String corsHeaders) throws IOException {
         System.out.println("[ConfLoader] Sending JSON response");
         String response = "HTTP/1.1 200 OK\r\n" +
+                corsHeaders +
                 "Content-Type: application/json; charset=UTF-8\r\n" +
                 "Content-Length: " + jsonData.getBytes().length + "\r\n" +
                 "Cache-Control: no-cache\r\n" +
@@ -416,9 +447,10 @@ public class ConfLoader implements Servlet {
     /**
      * Sends a simple HTML response
      */
-    private void sendSimpleHtmlResponse(OutputStream toClient, String htmlContent) throws IOException {
+    private void sendSimpleHtmlResponse(OutputStream toClient, String htmlContent, String corsHeaders) throws IOException {
         System.out.println("[ConfLoader] Sending simple HTML response");
         String response = "HTTP/1.1 200 OK\r\n" +
+                corsHeaders +
                 "Content-Type: text/html; charset=UTF-8\r\n" +
                 "Content-Length: " + htmlContent.getBytes().length + "\r\n" +
                 "\r\n" +
@@ -432,7 +464,7 @@ public class ConfLoader implements Servlet {
     /**
      * Sends an error response to the client with the specified status and message.
      */
-    private void sendErrorResponse(OutputStream toClient, int statusCode, String statusText, String message) throws IOException {
+    private void sendErrorResponse(OutputStream toClient, int statusCode, String statusText, String message, String corsHeaders) throws IOException {
         System.out.println("[ConfLoader] Sending error response - " + statusCode + " " + statusText + ": " + message);
         String htmlError = String.format(
             "<!DOCTYPE html>\n" +
@@ -461,6 +493,7 @@ public class ConfLoader implements Servlet {
         
         String response = String.format(
             "HTTP/1.1 %d %s\r\n" +
+            corsHeaders +
             "Content-Type: text/html; charset=UTF-8\r\n" +
             "Content-Length: %d\r\n" +
             "\r\n" +

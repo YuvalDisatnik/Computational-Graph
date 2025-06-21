@@ -8,6 +8,7 @@ public class Topic {
 	public final String name;
 	private final Set<Agent> subs;
 	private final Set<Agent> pubs;
+	private volatile Message lastMessage = null;
 
 	Topic(String name) {
 		this.name = name;
@@ -24,9 +25,14 @@ public class Topic {
 	}
 
 	public void publish(Message m) {
+		this.lastMessage = m;
 		for (Agent agent : subs) {
 			agent.callback(name, m);
 		}
+	}
+
+	public Message getLastMessage() {
+		return this.lastMessage;
 	}
 
 	public void addPublisher(Agent a) {
