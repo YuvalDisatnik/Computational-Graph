@@ -119,4 +119,53 @@ window.addEventListener("message", (event) => {
       "*" // Allow cross-origin communication between frames
     );
   }
+
+  // When iframes are reloaded after publishing a message
+  if (event.data.type === "refreshData") {
+    console.log("Refreshing data after message publish");
+    refreshGraphData();
+  }
 });
+
+/**
+ * Fetches fresh graph data and updates the iframes
+ */
+function refreshGraphData() {
+  const outputFrame = document.getElementById("outputFrame");
+
+  // Fetch fresh graph data from the server
+  fetch("/graph-data")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Graph data not available yet.");
+      }
+      return response.json();
+    })
+    .then((graphData) => {
+      console.log("Fresh graph data received:", graphData);
+
+      // Send the fresh data to the results iframe
+      if (outputFrame.contentWindow) {
+        outputFrame.contentWindow.postMessage(
+          {
+            type: "updateResults",
+            data: graphData,
+          },
+          "*"
+        );
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching fresh graph data:", error);
+      // Send null data to show loading state
+      if (outputFrame.contentWindow) {
+        outputFrame.contentWindow.postMessage(
+          {
+            type: "updateResults",
+            data: null,
+          },
+          "*"
+        );
+      }
+    });
+}

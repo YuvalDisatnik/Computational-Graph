@@ -36,7 +36,13 @@
 
         const dataDiv = document.createElement("div");
         dataDiv.className = "topic-data";
-        dataDiv.innerHTML = `Value: ${topic.value}`;
+
+        // Handle undefined, null, or empty values
+        const displayValue =
+          topic.value !== undefined && topic.value !== null
+            ? topic.value
+            : "No value";
+        dataDiv.innerHTML = `Value: ${displayValue}`;
 
         topicItem.appendChild(title);
         topicItem.appendChild(dataDiv);
@@ -61,7 +67,9 @@
 
             // Update topics data
             const topics = data.nodes.filter((node) => node.type === "topic");
+            console.log("Topics data received:", topics);
             topics.forEach((topic) => {
+              console.log("Processing topic:", topic);
               const topicItem = createTopicItem(topic);
               topicsResults.appendChild(topicItem);
             });

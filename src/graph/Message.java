@@ -26,6 +26,8 @@ public class Message {
     // constructor to initialize a Message given a double
     public Message(double d) {
         this(String.valueOf(d));
+        System.out.println("    Message(double) constructor called with: " + d);
+        System.out.println("    Message created with asText: '" + this.asText + "'");
     }
 
     // a helper function to convert a string into a double

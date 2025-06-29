@@ -8,7 +8,7 @@ public class Topic {
 	public final String name;
 	private final Set<Agent> subs;
 	private final Set<Agent> pubs;
-	private volatile Message lastMessage = null;
+	private volatile String lastMessage = null;
 
 	Topic(String name) {
 		this.name = name;
@@ -25,13 +25,17 @@ public class Topic {
 	}
 
 	public void publish(Message m) {
-		this.lastMessage = m;
+		System.out.println("    Topic.publish() called for topic '" + name + "' with message: " + m.asText);
+		System.out.println("    Previous lastMessage: '" + this.lastMessage + "'");
+		this.lastMessage = m.asText;
+		System.out.println("    New lastMessage: '" + this.lastMessage + "'");
 		for (Agent agent : subs) {
 			agent.callback(name, m);
 		}
 	}
 
-	public Message getLastMessage() {
+	public String getLastMessage() {
+		System.out.println("    Topic.getLastMessage() called for topic '" + name + "', returning: '" + this.lastMessage + "'");
 		return this.lastMessage;
 	}
 

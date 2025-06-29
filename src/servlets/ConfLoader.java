@@ -159,12 +159,18 @@ public class ConfLoader implements Servlet {
     }
 
     private void handleGetGraphData(OutputStream toClient, String corsHeaders) throws IOException {
+        System.out.println("[ConfLoader] handleGetGraphData called");
         if (lastGraph == null) {
+            System.out.println("[ConfLoader] No graph available, sending 404");
             sendErrorResponse(toClient, 404, "Not Found", "Graph not available. Please upload a config file first.", corsHeaders);
             return;
         }
+        System.out.println("[ConfLoader] Converting graph to JSON");
         String graphJson = HtmlGraphWriter.graphToJson(lastGraph);
+        System.out.println("[ConfLoader] Graph JSON generated, length: " + graphJson.length());
+        System.out.println("[ConfLoader] Graph JSON preview: " + graphJson.substring(0, Math.min(200, graphJson.length())) + "...");
         sendJsonResponse(toClient, graphJson, corsHeaders);
+        System.out.println("[ConfLoader] JSON response sent");
     }
 
     public static Graph getLastGraph() {

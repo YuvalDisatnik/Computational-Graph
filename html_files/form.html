@@ -339,6 +339,11 @@
                 if (outputFrame) {
                   outputFrame.contentWindow.location.reload();
                 }
+
+                // Send message to parent to refresh data after iframe reload
+                setTimeout(() => {
+                  window.parent.postMessage({ type: "refreshData" }, "*");
+                }, 100);
               });
             } else {
               return response.text().then((text) => {

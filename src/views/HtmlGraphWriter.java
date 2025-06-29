@@ -213,18 +213,23 @@ public class HtmlGraphWriter {
         String value = null;
 
         if ("topic".equals(nodeType) || "result".equals(nodeType)) {
+            // Get the clean topic name (without the T prefix)
             String topicName = getDisplayLabel(node);
+            
+            // Look for matching topic in current topics
             for (Topic topic : currentTopics) {
                 if (topic.name.equals(topicName)) {
-                    Message lastMessage = topic.getLastMessage();
+                    String lastMessage = topic.getLastMessage();
                     if (lastMessage != null) {
-                        value = getNodeValue(lastMessage);
+                        value = lastMessage;
+                        LOGGER.info("[getNodeValue] Found topic '" + topicName + "' with value: " + value);
                     }
                     break;
                 }
             }
         }
 
+        // Fallback to node's own message if no topic value found
         if (value == null && node.getMsg() != null) {
             value = getNodeValue(node.getMsg());
         }
