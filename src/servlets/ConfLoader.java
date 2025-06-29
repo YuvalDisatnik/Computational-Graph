@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Servlet that handles configuration file uploads and generates a computational graph visualization.
@@ -60,7 +59,6 @@ public class ConfLoader implements Servlet {
 
             // Check which endpoint is being called
             String uri = ri.getUri();
-            System.out.println("[ConfLoader] Processing URI: " + uri);
             if ("/generate-config".equals(uri)) {
                 System.out.println("[ConfLoader] Handling generate-config endpoint");
                 handleGenerateConfig(ri, toClient, corsHeaders);
@@ -73,9 +71,8 @@ public class ConfLoader implements Servlet {
 
             // Extract file content from request
             if (ri.getContent() != null && ri.getContent().length > 0) {
-                System.out.println("[ConfLoader] Content length: " + ri.getContent().length + " bytes");
                 fileContent = new String(ri.getContent()).trim() + "\n";
-                System.out.println("[ConfLoader] Content preview: " + fileContent.substring(0, Math.min(100, fileContent.length())) + "...");
+                //System.out.println("[ConfLoader] Content preview: " + fileContent.substring(0, Math.min(100, fileContent.length())) + "...");
             } else {
                 System.out.println("[ConfLoader] Error: No content received");
                 sendErrorResponse(toClient, 400, "Bad Request", "No file content received. Please upload a configuration file.", corsHeaders);
@@ -89,48 +86,34 @@ public class ConfLoader implements Servlet {
             }
 
             // Validate configuration file format
-            System.out.println("[ConfLoader] Validating configuration format");
             if (!isValidConfigFormat(fileContent)) {
                 System.out.println("[ConfLoader] Error: Invalid configuration format");
                 sendErrorResponse(toClient, 400, "Bad Request", 
                     "Invalid configuration format. Expected format: each agent should have 3 lines (class name, subscriptions, publications).", corsHeaders);
                 return;
             }
-            System.out.println("[ConfLoader] Configuration format is valid");
-            System.out.println("[ConfLoader] Creating upload directory: " + UPLOAD_DIR);
             Files.createDirectories(Paths.get(UPLOAD_DIR));
-            System.out.println("[ConfLoader] Upload directory created successfully");
             // Save the configuration file with a unique name based on timestamp
             String fileName = (filename != null && !filename.isEmpty()) 
                 ? sanitizeFilename(filename) 
                 : "config_" + System.currentTimeMillis() + ".conf";
-            System.out.println("[ConfLoader] Using filename: " + fileName);
             
             // saving the file to the upload directory
             Path filePath = Paths.get(UPLOAD_DIR, fileName);
             System.out.println("[ConfLoader] Saving file to: " + filePath);
             Files.write(filePath, fileContent.getBytes());
-            System.out.println("[ConfLoader] File saved successfully");
             // Process the configuration file
-            System.out.println("[ConfLoader] Clearing TopicManager");
             TopicManagerSingleton.get().clear();
-            System.out.println("[ConfLoader] Creating GenericConfig");
             GenericConfig config = new GenericConfig();
-            System.out.println("[ConfLoader] Setting configuration file: " + filePath);
             config.setConfFile(filePath.toString());
-            System.out.println("[ConfLoader] Creating configuration");
             config.create();
-            System.out.println("[ConfLoader] Configuration created successfully");
 
             // Print graph data before creation
-            GenericConfig.logGraphData(null); // Before creating the graph
-            System.out.println("Before creating the graph");
+            //GenericConfig.logGraphData(null); // Before creating the graph
             Graph graph = new Graph();
-            System.out.println("After creating the graph");
-            GenericConfig.logGraphData(graph); // After creating the graph
+            //GenericConfig.logGraphData(graph); // After creating the graph
             graph.createFromTopics();
-            System.out.println("After create from topics");
-            GenericConfig.logGraphData(graph); // After creating the graph
+            //GenericConfig.logGraphData(graph); // After creating the graph
             lastGraph = graph;
             System.out.println("[ConfLoader] Graph created successfully");
 
@@ -145,7 +128,6 @@ public class ConfLoader implements Servlet {
                 System.out.println("[ConfLoader] Sending HTML response");
                 sendHtmlResponse(toClient, graph, corsHeaders);
             }
-            System.out.println("[ConfLoader] Response sent successfully");
 
         } catch (IllegalArgumentException e) {
             System.out.println("[ConfLoader] Configuration error: " + e.getMessage());
@@ -182,7 +164,6 @@ public class ConfLoader implements Servlet {
      */
     private void handleGenerateConfig(RequestInfo ri, OutputStream toClient, String corsHeaders) throws IOException {
         try {
-            System.out.println("[ConfLoader] Starting generate-config handling");
             byte[] contentBytes = ri.getContent();
             String requestBody = contentBytes != null ? new String(contentBytes) : null;
             
@@ -203,11 +184,9 @@ public class ConfLoader implements Servlet {
                 return;
             }
 
-            System.out.println("[ConfLoader] Generating configuration from description");
             String generatedConfig = generateConfigFromDescription(description);
             System.out.println("[ConfLoader] Generated config:\n" + generatedConfig);
             
-            System.out.println("[ConfLoader] Sending config file response");
             sendConfigFileResponse(toClient, generatedConfig, corsHeaders);
             System.out.println("[ConfLoader] Config file sent successfully");
             
@@ -258,19 +237,16 @@ public class ConfLoader implements Servlet {
         StringBuilder config = new StringBuilder();
         
         // Generate a simple configuration based on common patterns
-        config.append("# Generated configuration from description:\n");
         config.append("# ").append(description).append("\n\n");
         
         // Add some basic agents based on keywords in description
         if (description.toLowerCase().contains("add") || description.toLowerCase().contains("plus") || description.toLowerCase().contains("sum")) {
-            System.out.println("[ConfLoader] Adding PlusAgent configuration");
             config.append("test.PlusAgent\n");
             config.append("A,B\n");
             config.append("SUM\n\n");
         }
         
         if (description.toLowerCase().contains("increment") || description.toLowerCase().contains("inc")) {
-            System.out.println("[ConfLoader] Adding IncAgent configuration");
             config.append("test.IncAgent\n");
             config.append("SUM\n");
             config.append("RESULT\n\n");
@@ -278,7 +254,6 @@ public class ConfLoader implements Servlet {
         
         // Default simple configuration if no keywords match
         if (config.toString().split("\n").length < 5) {
-            System.out.println("[ConfLoader] Using default configuration");
             config.setLength(0);
             config.append("# Generated configuration\n");
             config.append("test.PlusAgent\n");
@@ -297,7 +272,6 @@ public class ConfLoader implements Servlet {
      * Sends a configuration file as download response
      */
     private void sendConfigFileResponse(OutputStream toClient, String configContent, String corsHeaders) throws IOException {
-        System.out.println("[ConfLoader] Preparing config file response");
         String filename = "generated-config-" + System.currentTimeMillis() + ".conf";
         System.out.println("[ConfLoader] Using filename: " + filename);
         
@@ -309,7 +283,6 @@ public class ConfLoader implements Servlet {
                 "\r\n" +
                 configContent;
         
-        System.out.println("[ConfLoader] Sending config file response");
         toClient.write(response.getBytes());
         toClient.flush();
         System.out.println("[ConfLoader] Config file response sent");
@@ -319,7 +292,6 @@ public class ConfLoader implements Servlet {
      * Validates the configuration file format
      */
     private boolean isValidConfigFormat(String content) {
-        System.out.println("[ConfLoader] Validating config format");
         String[] lines = content.split("\n");
         int nonEmptyLines = 0;
         
@@ -331,7 +303,6 @@ public class ConfLoader implements Servlet {
         
         // Must have a multiple of 3 non-empty lines (class, subs, pubs for each agent)
         boolean isValid = nonEmptyLines > 0 && nonEmptyLines % 3 == 0;
-        System.out.println("[ConfLoader] Config format validation result: " + isValid + " (non-empty lines: " + nonEmptyLines + ")");
         return isValid;
     }
 
@@ -339,7 +310,6 @@ public class ConfLoader implements Servlet {
      * Sanitizes filename to prevent path traversal attacks
      */
     private String sanitizeFilename(String filename) {
-        System.out.println("[ConfLoader] Sanitizing filename: " + filename);
         if (filename == null) {
             System.out.println("[ConfLoader] Filename is null, using default");
             return "config.conf";
@@ -361,7 +331,6 @@ public class ConfLoader implements Servlet {
      * Sends an HTML response with the graph visualization
      */
     private void sendHtmlResponse(OutputStream toClient, Graph graph, String corsHeaders) throws IOException {
-        System.out.println("[ConfLoader] Preparing HTML response");
         try {
             // Use HtmlGraphWriter to generate the HTML
             List<String> htmlLines = HtmlGraphWriter.getGraphHTML(graph);
@@ -383,7 +352,6 @@ public class ConfLoader implements Servlet {
             
             toClient.write(response.getBytes());
             toClient.flush();
-            System.out.println("[ConfLoader] HTML response sent successfully");
             
             // For testing purposes, also write to test.html
             HtmlGraphWriter.writeToTestFile(graph);
@@ -399,7 +367,6 @@ public class ConfLoader implements Servlet {
      * Sends a JSON response with the graph data
      */
     private void sendJsonResponse(OutputStream toClient, String jsonData, String corsHeaders) throws IOException {
-        System.out.println("[ConfLoader] Sending JSON response");
         String response = "HTTP/1.1 200 OK\r\n" +
                 corsHeaders +
                 "Content-Type: application/json; charset=UTF-8\r\n" +
@@ -417,7 +384,6 @@ public class ConfLoader implements Servlet {
      * Generates a fallback HTML response if the template is not available
      */
     private String generateFallbackHtml(Graph graph) {
-        System.out.println("[ConfLoader] Generating fallback HTML");
         StringBuilder html = new StringBuilder();
         html.append("<!DOCTYPE html>\n");
         html.append("<html>\n");
@@ -454,7 +420,6 @@ public class ConfLoader implements Servlet {
      * Sends a simple HTML response
      */
     private void sendSimpleHtmlResponse(OutputStream toClient, String htmlContent, String corsHeaders) throws IOException {
-        System.out.println("[ConfLoader] Sending simple HTML response");
         String response = "HTTP/1.1 200 OK\r\n" +
                 corsHeaders +
                 "Content-Type: text/html; charset=UTF-8\r\n" +
