@@ -39,9 +39,7 @@
 
         // Handle undefined, null, or empty values
         const displayValue =
-          topic.value !== undefined && topic.value !== null
-            ? topic.value
-            : "No value";
+          topic.value !== undefined && topic.value !== null ? topic.value : "0";
         dataDiv.innerHTML = `Value: ${displayValue}`;
 
         topicItem.appendChild(title);

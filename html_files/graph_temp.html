@@ -47,106 +47,25 @@
     <!-- This <div> is where Cytoscape will render the graph -->
     <div id="cy"></div>
 
-    <!-- 
-      4) We create a <script type="application/json"> tag whose contents
-         will be replaced (server-side) with the actual JSON. 
-         Your Java code should literally replace the string "__GRAPH_DATA_JSON__". 
-    -->
-    <script id="graph-data" type="application/json">
-      {
-        "nodes": [
-          {
-            "id": "A",
-            "label": "A",
-            "type": "topic",
-            "value": 2.0
-          },
-          {
-            "id": "B",
-            "label": "B",
-            "type": "topic",
-            "value": 3.5
-          },
-          {
-            "id": "plus",
-            "label": "plus",
-            "type": "agent"
-          },
-          {
-            "id": "C",
-            "label": "C",
-            "type": "topic",
-            "value": 5.5
-          },
-          {
-            "id": "times",
-            "label": "times",
-            "type": "agent"
-          },
-          {
-            "id": "D",
-            "label": "D",
-            "type": "topic",
-            "value": 1.0
-          },
-          {
-            "id": "result",
-            "label": "Result",
-            "type": "result",
-            "value": 5.5
-          }
-        ],
-        "edges": [
-          { "source": "X", "target": "plus" },
-          { "source": "P", "target": "plus" },
-          { "source": "plus", "target": "C" },
-          { "source": "O", "target": "times" },
-          { "source": "Q", "target": "times" },
-          { "source": "times", "target": "result" }
-        ]
-      }
-    </script>
-
-    <!-- 5) The "renderer" script: parse the JSON and draw the graph -->
     <script>
-      (function () {
-        // Attempt to read the JSON from #graph-data
-        let dataNode = document.getElementById("graph-data");
-        let data = null;
-
-        try {
-          data = JSON.parse(dataNode.textContent.trim());
-        } catch (e) {
-          console.warn("No valid graph data found:", e);
-        }
-
-        // If we didn't get any data (e.g. someone opened the template
-        // directly, or the placeholder wasn't replaced), show a message.
-        if (!data || !data.nodes || !data.edges) {
-          document.body.innerHTML = `
-            <div style="font-family: Garamond, monospace; text-align: center; margin-top: 20%; color: var(--text-color);">
-              <h2>No graph data provided</h2>
-              <p>Please load a configuration file or ensure the server has injected the graph JSON.</p>
-            </div>
-          `;
-          return;
-        }
-
-        // Otherwise, initialize Cytoscape exactly as before, using data.nodes and data.edges:
+      function renderGraph(data) {
+        console.log("[Graph] Rendering graph with data:", data);
         document.getElementById("cy").innerHTML = "";
+        const elements = [
+          ...data.nodes.map((n) => {
+            const label =
+              n.type === "topic" ? `${n.label}\n(${n.value ?? ""})` : n.label;
+            if (n.type === "topic") {
+              console.log(`[Graph] Topic node '${n.label}' value:`, n.value);
+            }
+            return { data: { ...n, label } };
+          }),
+          ...data.edges.map((e) => ({ data: e })),
+        ];
+        console.log("[Graph] Elements for Cytoscape:", elements);
         const cy = cytoscape({
           container: document.getElementById("cy"),
-          elements: [
-            ...data.nodes.map((n) => ({
-              data: {
-                ...n,
-                label:
-                  n.type === "topic" ? `${n.label}\n(${n.value})` : n.label,
-              },
-            })),
-            ...data.edges.map((e) => ({ data: e })),
-          ],
-
+          elements,
           layout: {
             name: "dagre",
             rankDir: "LR",
@@ -157,7 +76,6 @@
             animate: true,
             animationDuration: 300,
           },
-
           style: [
             {
               selector: 'node[type = "topic"]',
@@ -255,26 +173,47 @@
             },
           ],
         });
-
-        // Enable node dragging and other interactions
         cy.on("mouseover", "node", function (e) {
           e.target.style("border-width", "3px");
         });
-
         cy.on("mouseout", "node", function (e) {
           if (!e.target.selected()) {
             e.target.style("border-width", "2px");
           }
         });
-
-        // Add zoom controls
         cy.userZoomingEnabled(true);
         cy.userPanningEnabled(true);
         cy.boxSelectionEnabled(true);
-
-        // Fit the graph to the viewport
         cy.fit(50);
-      })();
+      }
+
+      function fetchAndRender() {
+        console.log("[Graph] Fetching /graph-data ...");
+        fetch("/graph-data")
+          .then((res) => res.json())
+          .then((data) => {
+            console.log("[Graph] /graph-data response:", data);
+            renderGraph(data);
+          })
+          .catch((e) => {
+            console.error("[Graph] Error loading graph data:", e);
+            document.getElementById("cy").innerHTML =
+              "<div>Error loading graph data.</div>";
+          });
+      }
+
+      // Fetch and render on load
+      fetchAndRender();
+
+      // Listen for refresh messages
+      window.addEventListener("message", (event) => {
+        if (event.data.type === "refreshData") {
+          console.log(
+            "[Graph] Received refreshData message, re-fetching graph data."
+          );
+          fetchAndRender();
+        }
+      });
     </script>
   </body>
 </html>

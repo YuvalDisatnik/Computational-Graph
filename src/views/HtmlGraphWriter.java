@@ -57,28 +57,25 @@ public class HtmlGraphWriter {
         boolean firstNode = true;
         for (Node node : graph) {
             if (processedNodes.contains(node.getName())) {
-                //                LOGGER.fine("Skipping duplicate node: " + node.getName());
                 continue;
             }
             processedNodes.add(node.getName());
-            
+
             if (!firstNode) json.append(",");
             firstNode = false;
-            
+
             String nodeType = getNodeType(node);
-            //                LOGGER.fine("Processing node: " + node.getName() + " (type: " + nodeType + ")");
-            
+            String displayLabel = getDisplayLabel(node);
+            String nodeValue = getNodeValue(node, currentTopics);
+            System.out.println("[graphToJson] Node: '" + node.getName() + "', Type: '" + nodeType + "', Label: '" + displayLabel + "', Value: '" + nodeValue + "'");
+
             json.append("{");
             json.append("\"id\":\"").append(escapeJson(node.getName())).append("\",");
-            json.append("\"label\":\"").append(escapeJson(getDisplayLabel(node))).append("\",");
+            json.append("\"label\":\"").append(escapeJson(displayLabel)).append("\",");
             json.append("\"type\":\"").append(nodeType).append("\"");
-            
-            String nodeValue = getNodeValue(node, currentTopics);
             if (nodeValue != null) {
-                LOGGER.info("[graphToJson] Node '" + node.getName() + "' (type: " + nodeType + ") value: " + nodeValue);
-                json.append(",\"value\":").append(nodeValue);
+                json.append(",\"value\":\"").append(escapeJson(nodeValue)).append("\"");
             }
-            
             json.append("}");
         }
         
@@ -103,7 +100,9 @@ public class HtmlGraphWriter {
         json.append("}");
         
         //            LOGGER.info("Converted graph to JSON: " + processedNodes.size() + " nodes");
-        return json.toString();
+        String jsonString = json.toString();
+        System.out.println("[graphToJson] FINAL JSON SENT TO FRONTEND:\n" + jsonString);
+        return jsonString;
     }
     
     /**
@@ -208,33 +207,33 @@ public class HtmlGraphWriter {
     private static String getNodeValue(Node node, Collection<Topic> currentTopics) {
         String nodeType = getNodeType(node);
         String value = null;
-
+        System.out.println("[getNodeValue] Checking node: '" + node.getName() + "' of type '" + nodeType + "'");
         if ("topic".equals(nodeType) || "result".equals(nodeType)) {
-            // Get the clean topic name (without the T prefix)
             String topicName = getDisplayLabel(node);
-            
-            // Look for matching topic in current topics
+            System.out.println("[getNodeValue] Looking for topic with name: '" + topicName + "'");
             for (Topic topic : currentTopics) {
+                System.out.println("[getNodeValue] Comparing with topic: '" + topic.name + "', lastMessage: '" + topic.getLastMessage() + "'");
                 if (topic.name.equals(topicName)) {
                     String lastMessage = topic.getLastMessage();
                     if (lastMessage != null) {
                         value = lastMessage;
-                        LOGGER.info("[getNodeValue] Found topic '" + topicName + "' with value: " + value);
+                        System.out.println("[getNodeValue] Found topic '" + topicName + "' with value: '" + value + "'");
+                    } else {
+                        System.out.println("[getNodeValue] Topic '" + topicName + "' has no lastMessage");
                     }
                     break;
                 }
             }
         }
-
-        // Fallback to node's own message if no topic value found
         if (value == null && node.getMsg() != null) {
             value = getNodeValue(node.getMsg());
+            System.out.println("[getNodeValue] Fallback to node.getMsg(): '" + value + "'");
         }
-
         if ("agent".equals(nodeType)) {
+            System.out.println("[getNodeValue] Node is agent, returning null");
             return null;
         }
-
+        System.out.println("[getNodeValue] Returning value: '" + value + "' for node: '" + node.getName() + "'");
         return value;
     }
     

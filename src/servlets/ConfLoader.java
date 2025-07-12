@@ -46,9 +46,9 @@ public class ConfLoader implements Servlet {
         }
 
         try {
-            System.out.println("[ConfLoader] Starting request handling");
-            System.out.println("[ConfLoader] HTTP Command: " + ri.getHttpCommand());
-            System.out.println("[ConfLoader] URI: " + ri.getUri());
+            //System.out.println("[ConfLoader] Starting request handling");
+            //System.out.println("[ConfLoader] HTTP Command: " + ri.getHttpCommand());
+            //System.out.println("[ConfLoader] URI: " + ri.getUri());
 
             // Only handle POST requests
             if (!"POST".equalsIgnoreCase(ri.getHttpCommand())) {
@@ -60,13 +60,13 @@ public class ConfLoader implements Servlet {
             // Check which endpoint is being called
             String uri = ri.getUri();
             if ("/generate-config".equals(uri)) {
-                System.out.println("[ConfLoader] Handling generate-config endpoint");
+                //System.out.println("[ConfLoader] Handling generate-config endpoint");
                 handleGenerateConfig(ri, toClient, corsHeaders);
                 return;
             }
             // Try to get filename from parameters (for simple uploads)
             String filename = ri.getParameters().get("filename");
-            System.out.println("[ConfLoader] Filename from parameters: " + filename);
+            //System.out.println("[ConfLoader] Filename from parameters: " + filename);
             String fileContent = null;
 
             // Extract file content from request
@@ -100,7 +100,7 @@ public class ConfLoader implements Servlet {
             
             // saving the file to the upload directory
             Path filePath = Paths.get(UPLOAD_DIR, fileName);
-            System.out.println("[ConfLoader] Saving file to: " + filePath);
+            //System.out.println("[ConfLoader] Saving file to: " + filePath);
             Files.write(filePath, fileContent.getBytes());
             // Process the configuration file
             TopicManagerSingleton.get().clear();
@@ -115,7 +115,7 @@ public class ConfLoader implements Servlet {
             graph.createFromTopics();
             //GenericConfig.logGraphData(graph); // After creating the graph
             lastGraph = graph;
-            System.out.println("[ConfLoader] Graph created successfully");
+            //System.out.println("[ConfLoader] Graph created successfully");
 
             // Check if we should return JSON or HTML
             String acceptHeader = ri.getParameters().get("Accept");
@@ -147,12 +147,12 @@ public class ConfLoader implements Servlet {
             sendErrorResponse(toClient, 404, "Not Found", "Graph not available. Please upload a config file first.", corsHeaders);
             return;
         }
-        System.out.println("[ConfLoader] Converting graph to JSON");
+        //System.out.println("[ConfLoader] Converting graph to JSON");
         String graphJson = HtmlGraphWriter.graphToJson(lastGraph);
-        System.out.println("[ConfLoader] Graph JSON generated, length: " + graphJson.length());
-        System.out.println("[ConfLoader] Graph JSON preview: " + graphJson.substring(0, Math.min(200, graphJson.length())) + "...");
+        //System.out.println("[ConfLoader] Graph JSON generated, length: " + graphJson.length());
+        //System.out.println("[ConfLoader] Graph JSON preview: " + graphJson.substring(0, Math.min(200, graphJson.length())) + "...");
         sendJsonResponse(toClient, graphJson, corsHeaders);
-        System.out.println("[ConfLoader] JSON response sent");
+        //System.out.println("[ConfLoader] JSON response sent");
     }
 
     public static Graph getLastGraph() {
@@ -167,7 +167,7 @@ public class ConfLoader implements Servlet {
             byte[] contentBytes = ri.getContent();
             String requestBody = contentBytes != null ? new String(contentBytes) : null;
             
-            System.out.println("[ConfLoader] Request body: " + requestBody);
+            //System.out.println("[ConfLoader] Request body: " + requestBody);
             
             if (requestBody == null || requestBody.trim().isEmpty()) {
                 System.out.println("[ConfLoader] Error: Empty request body");
@@ -176,7 +176,7 @@ public class ConfLoader implements Servlet {
             }
 
             String description = extractDescriptionFromJson(requestBody);
-            System.out.println("[ConfLoader] Extracted description: " + description);
+            //System.out.println("[ConfLoader] Extracted description: " + description);
 
             if (description == null || description.trim().isEmpty()) {
                 System.out.println("[ConfLoader] Error: Empty description");
@@ -185,10 +185,10 @@ public class ConfLoader implements Servlet {
             }
 
             String generatedConfig = generateConfigFromDescription(description);
-            System.out.println("[ConfLoader] Generated config:\n" + generatedConfig);
+            //System.out.println("[ConfLoader] Generated config:\n" + generatedConfig);
             
             sendConfigFileResponse(toClient, generatedConfig, corsHeaders);
-            System.out.println("[ConfLoader] Config file sent successfully");
+            //System.out.println("[ConfLoader] Config file sent successfully");
             
         } catch (Exception e) {
             System.out.println("[ConfLoader] Error in generate-config: " + e.getMessage());
