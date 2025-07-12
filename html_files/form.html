@@ -13,7 +13,7 @@
   <body>
     <div class="panel input-panel">
       <h1>Computational Graph</h1>
-      <h2>Configuration</h2>
+      <h3>Configuration</h3>
       <div class="file-selection">
         <span id="fileName">No file chosen</span>
         <button id="chooseFileBtn">Choose File</button>
@@ -29,10 +29,14 @@
 
       <!-- Send Message Section -->
       <h3>Send Message</h3>
-      <label for="topic">Topic Name:</label>
-      <input type="text" id="topic" placeholder="Enter topic..." />
-      <label for="message">Message:</label>
-      <input type="text" id="message" placeholder="Enter message..." />
+      <div class="input-row">
+        <label for="topic">Topic Name:</label>
+        <input type="text" id="topic" placeholder="Enter topic..." />
+      </div>
+      <div class="input-row">
+        <label for="message">Message:</label>
+        <input type="text" id="message" placeholder="Enter message..." />
+      </div>
       <button id="sendBtn">Send</button>
 
       <hr style="width: 90%" />
@@ -60,10 +64,7 @@
           placeholder="Describe your graph structure..."
           rows="4"
         ></textarea>
-        <button id="generateBtn">
-          <i class="fas fa-magic"></i>
-          Generate
-        </button>
+        <button id="generateBtn">Generate</button>
       </div>
 
       <!-- Status Messages -->
@@ -101,14 +102,17 @@
         border: 1px solid #e2e8f0;
         border-radius: 6px;
         padding: 10px;
-        width: 250px;
-        font-size: 14px;
+        width: 200px;
+        font-size: 12px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         z-index: 1000;
-        left: 25px;
-        top: -5px;
+        left: 20px;
+        top: 0px;
         color: #4a5568;
-        line-height: 1.4;
+        line-height: 1.3;
+        max-width: calc(100vw - 40px);
+        word-wrap: break-word;
+        overflow-wrap: break-word;
       }
 
       #generateBtn {
@@ -476,6 +480,35 @@
             document.getElementById("generateBtn").click();
           }
         });
+
+      // Tooltip positioning to stay within iframe
+      document.addEventListener("DOMContentLoaded", function () {
+        const infoIcon = document.querySelector(".info-icon");
+        const tooltip = document.querySelector(".tooltip");
+
+        if (infoIcon && tooltip) {
+          infoIcon.addEventListener("mouseenter", function () {
+            const iconRect = infoIcon.getBoundingClientRect();
+            const tooltipRect = tooltip.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            // Reset position first
+            tooltip.style.left = "20px";
+            tooltip.style.top = "0px";
+
+            // Check if tooltip would overflow right edge
+            if (iconRect.left + 220 > viewportWidth) {
+              tooltip.style.left = "-180px";
+            }
+
+            // Check if tooltip would overflow bottom edge
+            if (iconRect.top + tooltipRect.height > viewportHeight) {
+              tooltip.style.top = "-120px";
+            }
+          });
+        }
+      });
     </script>
     <script src="fileUpload.js"></script>
   </body>

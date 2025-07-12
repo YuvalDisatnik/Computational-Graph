@@ -90,6 +90,25 @@ p {
   border: 1px solid #ccc;
 }
 
+/* Make label-input pairs display inline */
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.input-panel label {
+  flex: 0 0 80px;
+  font-size: 14px;
+  color: #333;
+}
+
+.input-panel input[type="text"] {
+  flex: 1;
+  margin-top: 0;
+}
+
 /* From Uiverse.io by cssbuttons-io */
 .input-panel button {
   width: 25%;
