@@ -60,11 +60,8 @@ public class GenericConfig implements Config {
             if (lines.size() % 3 != 0) {
                 throw new IllegalArgumentException("Invalid config file: " + name);
             }
-
-            int agentCount = lines.size() / 3;
             
             for (int i = 0; i < lines.size(); i += 3) {
-                int agentIndex = (i / 3) + 1;
                 
                 String className = lines.get(i);
                 String[] subs = lines.get(i + 1).split(",");
