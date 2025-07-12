@@ -272,14 +272,57 @@ java -cp out -Dport=9090 Main
 4. Test thoroughly
 5. Submit a pull request
 
+## 🧪 Testing
+
+The project includes a test suite for the HTTP request parser:
+
+```bash
+# Run the request parser tests
+java -cp out server.RequestParserTest
+```
+
+## 🔧 Development Guidelines
+
+### Code Style
+- Follow Java naming conventions (camelCase for methods, PascalCase for classes)
+- Use meaningful variable and method names
+- Add JavaDoc comments for all public methods and classes
+- Keep methods focused and single-purpose
+
+### Error Handling
+- Use proper exception handling with meaningful error messages
+- Avoid swallowing exceptions without logging
+- Provide user-friendly error responses in the web interface
+
+### Logging
+- Use structured logging for debugging and monitoring
+- Avoid excessive console output in production code
+- Log important events and errors appropriately
+
 ## 📄 License
 
 This project is part of an Advanced Programming course assignment.
 
 ## 👥 Authors
 
-- **Omri Triki** - Backend development, server implementation
-- **Yuval Disatnik** - Frontend development, graph visualization
+- **Omri Triki** - Backend development, server implementation, graph engine
+- **Yuval Disatnik** - Frontend development, graph visualization, UI/UX
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Setup
+1. Clone the repository
+2. Compile the project: `javac -cp src src/**/*.java -d out`
+3. Run the server: `java -cp out Main`
+4. Open http://localhost:8080/app/index.html
 
 ---
 

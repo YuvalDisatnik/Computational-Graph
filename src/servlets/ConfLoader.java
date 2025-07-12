@@ -29,7 +29,7 @@ public class ConfLoader implements Servlet {
     /** Directory where uploaded configuration files are stored */
     private static final String UPLOAD_DIR = "config_files";
     /** Path to the HTML template used for graph visualization */
-    private static final String TEMP_HTML = "html_files/graph_temp.html";
+    //private static final String TEMP_HTML = "html_files/graph_temp.html";
 
     @Override
     public void handle(RequestInfo ri, OutputStream toClient) throws IOException {

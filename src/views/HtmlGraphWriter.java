@@ -9,7 +9,6 @@ import graph.TopicManagerSingleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -438,7 +437,7 @@ public class HtmlGraphWriter {
                 }
             }
             //                    LOGGER.info("HTML preview (first 20 lines):\n" + preview.toString());
-            try (FileWriter writer = new FileWriter(outputPath.toString())) {
+            try (java.io.FileWriter writer = new java.io.FileWriter(outputPath.toString())) {
                 //                    LOGGER.info("Opened FileWriter in overwrite mode for: " + outputPath.toAbsolutePath());
                 for (String line : htmlLines) {
                     writer.write(line + "\n");
