@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Map;
 
+
 public class TopicDisplayer implements Servlet {
 
     @Override
@@ -30,6 +31,10 @@ public class TopicDisplayer implements Servlet {
             // If topic and message are provided, publish the message
             System.out.println("Publishing message to topic: " + topic);
             try {
+                // Check for cycles in the graph
+                if(ConfLoader.getHasCycles()){
+                    throw new IllegalStateException("Graph has cycles, can't process message");
+                }
                 System.out.println("Value before: " + TopicManagerSingleton.get().getTopic(topic).getLastMessage());
                 double msgValue = Double.parseDouble(message);
                 System.out.println("Parsed message value: " + msgValue);

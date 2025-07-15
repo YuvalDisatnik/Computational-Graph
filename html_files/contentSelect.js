@@ -49,7 +49,7 @@ function updateFramesContent(isDeployed = false) {
 
   if (isDeployed) {
     // In deployed state, show a temporary page first
-    graphFrame.src = "temp.html";
+    graphFrame.src = "loader.html";
 
     // Add a delay (e.g., 2000ms) before loading the main content
     setTimeout(() => {

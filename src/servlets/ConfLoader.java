@@ -25,11 +25,10 @@ import java.util.List;
  */
 public class ConfLoader implements Servlet {
     private static Graph lastGraph = null;
+    private static boolean hasCycles = false;
 
     /** Directory where uploaded configuration files are stored */
     private static final String UPLOAD_DIR = "config_files";
-    /** Path to the HTML template used for graph visualization */
-    //private static final String TEMP_HTML = "html_files/graph_temp.html";
 
     @Override
     public void handle(RequestInfo ri, OutputStream toClient) throws IOException {
@@ -57,13 +56,6 @@ public class ConfLoader implements Servlet {
                 return;
             }
 
-            // Check which endpoint is being called
-            String uri = ri.getUri();
-            if ("/generate-config".equals(uri)) {
-                //System.out.println("[ConfLoader] Handling generate-config endpoint");
-                handleGenerateConfig(ri, toClient, corsHeaders);
-                return;
-            }
             // Try to get filename from parameters (for simple uploads)
             String filename = ri.getParameters().get("filename");
             //System.out.println("[ConfLoader] Filename from parameters: " + filename);
@@ -97,8 +89,8 @@ public class ConfLoader implements Servlet {
             String fileName = (filename != null && !filename.isEmpty()) 
                 ? sanitizeFilename(filename) 
                 : "config_" + System.currentTimeMillis() + ".conf";
-            
-            // saving the file to the upload directory
+
+                // saving the file to the upload directory
             Path filePath = Paths.get(UPLOAD_DIR, fileName);
             //System.out.println("[ConfLoader] Saving file to: " + filePath);
             Files.write(filePath, fileContent.getBytes());
@@ -116,7 +108,7 @@ public class ConfLoader implements Servlet {
             //GenericConfig.logGraphData(graph); // After creating the graph
             lastGraph = graph;
             //System.out.println("[ConfLoader] Graph created successfully");
-
+            hasCycles = graph.hasCycles();
             // Check if we should return JSON or HTML
             String acceptHeader = ri.getParameters().get("Accept");
             System.out.println("[ConfLoader] Accept header: " + acceptHeader);
@@ -492,5 +484,9 @@ public class ConfLoader implements Servlet {
     @Override
     public void close() throws IOException {
         System.out.println("[ConfLoader] Closing servlet");
+    }
+
+    public static boolean getHasCycles(){
+        return hasCycles;
     }
 }

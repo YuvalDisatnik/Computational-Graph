@@ -41,32 +41,6 @@
 
       <hr style="width: 90%" />
 
-      <!-- Generate Configuration Section -->
-      <div class="generate-section">
-        <div class="section-header">
-          <h3>Generate Configuration File</h3>
-          <div class="info-icon">
-            <i class="fas fa-star"></i
-            ><i
-              class="fas fa-star"
-              style="font-size: 0.7em; margin-left: -0.3em"
-            ></i>
-            <div class="tooltip">
-              Describe your computational graph structure using natural
-              language. The system will generate a configuration file based on
-              your description. Include information about nodes, connections,
-              and operations.
-            </div>
-          </div>
-        </div>
-        <textarea
-          id="graphDescription"
-          placeholder="Describe your graph structure..."
-          rows="4"
-        ></textarea>
-        <button id="generateBtn">Generate</button>
-      </div>
-
       <!-- Status Messages -->
       <div id="statusMessages" class="status-messages" style="display: none">
         <div id="statusText"></div>
@@ -250,18 +224,15 @@
                   return response.text().then((text) => {
                     logToConsole("Error Response", text);
                     showStatus(
-                      "Failed to deploy configuration. Please try again.",
+                      "Failed to deploy configuration. Please check your file.",
                       "error"
                     );
                   });
                 }
               })
               .catch((error) => {
-                logToConsole("Network Error", error);
-                showStatus(
-                  "Network error. Please check your connection.",
-                  "error"
-                );
+                logToConsole("Action Failed", error);
+                showStatus("Action Failed", "error");
               });
           };
 
@@ -361,8 +332,8 @@
             }
           })
           .catch((error) => {
-            logToConsole("Network Error", error);
-            showStatus("Network error. Please check your connection.", "error");
+            logToConsole("Action Failed", error);
+            showStatus("Action Failed", "error");
           });
       });
 
