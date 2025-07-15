@@ -1,37 +1,44 @@
 # Computational Graph Web Application
 
-A modular simulation of a computational graph system using a publisher/subscriber architecture, implemented as part of the Advanced Programming course. This project provides a complete web-based interface for creating, visualizing, and interacting with computational graphs.
+A modular, extensible simulation of a computational graph system using a publisher/subscriber architecture. Developed as part of the Advanced Programming course, this project demonstrates modern software engineering practices, concurrent message-passing, and web-based visualization. The system is designed for educational purposes, allowing users to create, visualize, and interact with computational graphs in real time.
+
+## 🧠 Background & Motivation
+
+Computational graphs are widely used in data processing, machine learning, and distributed systems. This project models a computational graph as a set of agents (processing units) and topics (communication channels), using a publisher/subscriber pattern for message routing. The architecture is modular, supporting easy extension with new agent types and graph topologies. The web interface provides an accessible way to experiment with graph-based computation, configuration management, and real-time feedback.
 
 ## 🌟 Features
 
-- **Interactive Web Interface** - Modern, responsive UI with iframe-based architecture and seamless state management
-- **Configuration Management** - Upload and manage computational graph configurations with real-time validation
-- **Real-time Visualization** - Dynamic graph rendering with Cytoscape.js and coordinated iframe updates
-- **Message Publishing** - Send messages to topics in real-time with immediate feedback
-- **AI-Powered Config Generation** - Generate configurations from natural language descriptions
-- **RESTful API** - Complete backend with servlet-based endpoints returning JSON responses
-- **Static File Serving** - Built-in web server for HTML/CSS/JS assets
-- **Robust Error Handling** - Comprehensive error reporting and troubleshooting guidance
+- **Interactive Web Interface** – Modern, responsive UI with iframe-based architecture and seamless state management
+- **Configuration Management** – Upload and manage computational graph configurations with real-time validation
+- **Real-time Visualization** – Dynamic graph rendering with Cytoscape.js and coordinated iframe updates
+- **Message Publishing** – Send messages to topics in real time with immediate feedback
+- **AI-Powered Config Generation** – Generate configurations from natural language descriptions
+- **RESTful API** – Complete backend with servlet-based endpoints returning JSON responses
+- **Static File Serving** – Built-in web server for HTML/CSS/JS assets
+- **Robust Error Handling** – Comprehensive error reporting and troubleshooting guidance
 
 ## 🏗️ Architecture
 
 ### Backend Components
-- **HTTP Server** (`MyHTTPServer`) - Custom HTTP server implementation
-- **Servlet Framework** - Request routing and handling
-- **Graph Engine** - Publisher/subscriber computational graph system
-- **Configuration Parser** - Processes `.conf` files into executable graphs
+- **HTTP Server** (`MyHTTPServer`) – Custom HTTP server implementation
+- **Servlet Framework** – Request routing and handling
+- **Graph Engine** – Publisher/subscriber computational graph system
+- **Configuration Parser** – Processes `.conf` files into executable graphs
 
 ### Frontend Components
-- **Main Interface** (`index.html`) - Iframe-based layout with coordinated updates
-- **Configuration Panel** (`form.html`) - File upload, message publishing, and config generation
-- **Graph Visualization** (`graph.html`/`graph_temp.html`) - Interactive graph display using Cytoscape.js
-- **Results Display** (`results.html`) - Real-time output and computation results
-- **Content Coordinator** (`contentSelect.js`) - Manages iframe communication and state synchronization
+- **Main Interface** (`index.html`) – Iframe-based layout with coordinated updates
+- **Configuration Panel** (`form.html`) – File upload, message publishing, and config generation
+- **Graph Visualization** (`graph.html`/`graph_temp.html`/`generated_graph.html`) – Interactive graph display using Cytoscape.js
+- **Results Display** (`results.html`) – Real-time output and computation results
+- **Content Coordinator** (`contentSelect.js`) – Manages iframe communication and state synchronization
+
+> **Note:** All web interface files are located in the `html_files/` directory and are served via the `/app/` endpoint (e.g., `/app/index.html`).
 
 ### Key Servlets
-- `ConfLoader` - Handles configuration uploads (`/upload`) and generation (`/generate-config`) with JSON response support
-- `TopicDisplayer` - Manages message publishing (`/publish`) with real-time feedback
-- `HtmlLoader` - Serves static web assets (`/app/`) with proper MIME type handling
+- `ConfLoader` – Handles configuration uploads (`/upload`) and generation (`/generate-config`) with JSON response support
+- `TopicDisplayer` – Manages message publishing (`/publish`) with real-time feedback
+- `HtmlLoader` – Serves static web assets (`/app/`) with proper MIME type handling
+- `GraphDataServlet` – (if enabled) Provides graph data for visualization
 
 ## 🚀 Quick Start
 
@@ -39,11 +46,11 @@ A modular simulation of a computational graph system using a publisher/subscribe
 - Java 8 or higher
 - Web browser (Chrome, Firefox, Safari, Edge)
 
-### Running the Application
+### Installation & Running
 
 1. **Clone and Navigate**
    ```bash
-   git clone <repository-url>
+   git clone <https://github.com/YuvalDisatnik/Computational-Graph.git>
    cd Computational-Graph
    ```
 
@@ -63,6 +70,32 @@ A modular simulation of a computational graph system using a publisher/subscribe
 5. **Stop the Server**
    Press `Enter` in the terminal or `Ctrl+C`
 
+> **Troubleshooting:**
+> - If you change files in `html_files/`, clear your browser cache or do a hard refresh to see updates.
+> - If port 8080 is in use, edit the port in `Main.java` and recompile.
+
+## 📁 Project Structure
+
+```
+Computational-Graph/
+├── src/
+│   ├── Main.java                 # Application entry point
+│   ├── servlets/                 # HTTP request handlers (ConfLoader, TopicDisplayer, HtmlLoader, GraphDataServlet)
+│   ├── server/                   # HTTP server implementation (MyHTTPServer, RequestParser, Servlet)
+│   ├── graph/                    # Computational graph core (Agent, Topic, Message, ParallelAgent, TopicManagerSingleton)
+│   ├── configs/                  # Configuration management (Config, GenericConfig, Graph, Node, agent implementations)
+│   └── views/                    # Visualization components (HtmlGraphWriter)
+├── html_files/                   # Web frontend (index.html, form.html, graph.html, results.html, styles.css, *.js)
+├── config_files/                 # Sample configurations (simple.conf, cycle.conf)
+├── out/                          # Compiled Java classes
+└── README.md
+```
+
+- **src/** – All Java source code (backend, graph engine, servlets, config, visualization)
+- **html_files/** – All static web assets (served via `/app/`)
+- **config_files/** – Example configuration files for testing
+- **out/** – Compiled Java classes (output directory)
+
 ## 📖 Usage Guide
 
 ### 1. Upload Configuration
@@ -75,24 +108,19 @@ A modular simulation of a computational graph system using a publisher/subscribe
 - Enter your message in the "Message" field
 - Click "Send" or press Enter
 
-### 3. Generate Configuration
-- Describe your desired graph structure in natural language
-- Click "Generate" to create a downloadable `.conf` file
-- Upload the generated file to deploy it
-
-### 4. View Graph
+### 3. View Graph
 - The graph visualization updates automatically when configurations are deployed
 - Nodes represent agents and topics
 - Edges show data flow connections
 
 ## 🔌 API Endpoints
 
-| Method | Endpoint | Description | Request Content-Type | Response Content-Type |
-|--------|----------|-------------|---------------------|----------------------|
-| `GET` | `/app/*` | Static file serving | - | `text/html`, `text/css`, `application/javascript` |
-| `POST` | `/upload` | Configuration file upload | `text/plain` | `application/json` |
-| `POST` | `/publish` | Publish message to topic | `application/json` | `application/json` |
-| `POST` | `/generate-config` | Generate config from description | `application/json` | `application/octet-stream` |
+| Method | Endpoint            | Description                        | Request Content-Type   | Response Content-Type         |
+|--------|---------------------|------------------------------------|-----------------------|------------------------------|
+| `GET`  | `/app/*`            | Static file serving                | -                     | `text/html`, `text/css`, `application/javascript` |
+| `POST` | `/upload`           | Configuration file upload          | `text/plain`          | `application/json`           |
+| `POST` | `/publish`          | Publish message to topic           | `application/json`    | `application/json`           |
+| `POST` | `/generate-config`  | Generate config from description   | `application/json`    | `application/octet-stream`   |
 
 ### Example API Usage
 
@@ -100,13 +128,7 @@ A modular simulation of a computational graph system using a publisher/subscribe
 ```bash
 curl -X POST http://localhost:8080/upload \
   -H "Content-Type: text/plain" \
-  -d "test.PlusAgent
-A,B
-C
-
-test.IncAgent
-C
-RESULT"
+  --data-binary @config_files/simple.conf
 ```
 
 **Publishing a Message:**
@@ -124,40 +146,6 @@ curl -X POST http://localhost:8080/generate-config \
   --output generated-config.conf
 ```
 
-## 📁 Project Structure
-
-```
-Computational-Graph/
-├── src/
-│   ├── Main.java                 # Application entry point
-│   ├── servlets/                 # HTTP request handlers
-│   │   ├── ConfLoader.java       # Configuration management
-│   │   ├── TopicDisplayer.java   # Message publishing
-│   │   └── HtmlLoader.java       # Static file server
-│   ├── server/                   # HTTP server implementation
-│   │   ├── MyHTTPServer.java     # Main server class
-│   │   ├── RequestParser.java    # HTTP request parsing
-│   │   └── Servlet.java          # Servlet interface
-│   ├── graph/                    # Computational graph core
-│   │   ├── Topic.java            # Publisher/subscriber topics
-│   │   ├── Agent.java            # Computation agents
-│   │   ├── Message.java          # Message data structure
-│   │   └── TopicManagerSingleton.java
-│   ├── configs/                  # Configuration management
-│   └── views/                    # Visualization components
-│       └── HtmlGraphWriter.java  # Graph-to-JSON converter
-├── html_files/                   # Web frontend
-│   ├── index.html               # Main application page
-│   ├── form.html                # Configuration panel
-│   ├── graph.html               # Graph visualization
-│   ├── results.html             # Results display
-│   ├── styles.css               # Application styles
-│   └── *.js                     # JavaScript utilities
-├── config_files/                # Sample configurations
-│   └── simple.conf              # Example configuration
-└── out/                         # Compiled Java classes
-```
-
 ## 📝 Configuration File Format
 
 Configuration files define computational graphs using a simple text format:
@@ -170,10 +158,9 @@ A,B
 # Published topics (comma-separated)  
 C
 
-# Next agent
 test.IncAgent
 C
-D
+RESULT
 ```
 
 Each agent requires exactly 3 lines:
@@ -214,14 +201,14 @@ FINAL_RESULT
 ### Building
 ```bash
 # Compile all sources
-javac -cp src src/**/*.java -d out
+javac -cp src src/Main.java src/servlets/*.java src/server/*.java src/graph/*.java src/configs/*.java src/views/*.java -d out
 
 # Run with custom port
 java -cp out -Dport=9090 Main
 ```
 
 ### Adding New Agents
-1. Implement the `Agent` interface
+1. Implement the `Agent` interface (see `src/graph/Agent.java`)
 2. Add your agent class to the classpath
 3. Reference it in configuration files
 
@@ -235,7 +222,7 @@ java -cp out -Dport=9090 Main
 ### Common Issues
 
 **Issue: Page reloads/resets after clicking Deploy**
-- **Cause**: This was resolved in recent updates. The deploy functionality now properly returns JSON responses instead of HTML pages.
+- **Cause**: The deploy functionality now properly returns JSON responses instead of HTML pages.
 - **Solution**: Ensure you're using the latest version of the code.
 
 **Issue: Configuration upload fails**
@@ -252,11 +239,11 @@ java -cp out -Dport=9090 Main
   - Or modify the port in `Main.java` and recompile
 
 **Issue: Graph visualization doesn't update**
-- **Cause**: JavaScript errors or iframe communication issues.
+- **Cause**: Browser cache or JavaScript errors.
 - **Solution**: 
+  - Clear browser cache or do a hard refresh
   - Check browser developer console for errors
   - Ensure all HTML files are served from the same domain
-  - Clear browser cache and reload
 
 **Issue: Generated config files don't download**
 - **Cause**: Browser popup blocker or CORS issues.
@@ -264,65 +251,14 @@ java -cp out -Dport=9090 Main
   - Allow popups for `localhost:8080`
   - Check browser downloads folder
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 🧪 Testing
-
-The project includes a test suite for the HTTP request parser:
-
-```bash
-# Run the request parser tests
-java -cp out server.RequestParserTest
-```
-
-## 🔧 Development Guidelines
-
-### Code Style
-- Follow Java naming conventions (camelCase for methods, PascalCase for classes)
-- Use meaningful variable and method names
-- Add JavaDoc comments for all public methods and classes
-- Keep methods focused and single-purpose
-
-### Error Handling
-- Use proper exception handling with meaningful error messages
-- Avoid swallowing exceptions without logging
-- Provide user-friendly error responses in the web interface
-
-### Logging
-- Use structured logging for debugging and monitoring
-- Avoid excessive console output in production code
-- Log important events and errors appropriately
-
 ## 📄 License
 
 This project is part of an Advanced Programming course assignment.
 
 ## 👥 Authors
 
-- **Omri Triki** - Backend development, server implementation, graph engine
-- **Yuval Disatnik** - Frontend development, graph visualization, UI/UX
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Setup
-1. Clone the repository
-2. Compile the project: `javac -cp src src/**/*.java -d out`
-3. Run the server: `java -cp out Main`
-4. Open http://localhost:8080/app/index.html
+- **Omri Triki** 
+- **Yuval Disatnik** 
 
 ---
 
