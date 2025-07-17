@@ -130,7 +130,6 @@ Computational-Graph/
 | `GET`  | `/app/*`           | Static file serving              | -                    | `text/html`, `text/css`, `application/javascript` |
 | `POST` | `/upload`          | Configuration file upload        | `text/plain`         | `application/json`                                |
 | `POST` | `/publish`         | Publish message to topic         | `application/json`   | `application/json`                                |
-| `POST` | `/generate-config` | Generate config from description | `application/json`   | `application/octet-stream`                        |
 
 ### Example API Usage
 
