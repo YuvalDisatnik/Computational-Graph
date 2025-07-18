@@ -25,9 +25,9 @@ public class Main {
         // Register servlets for different endpoints
         server.addServlet("GET", "/publish", new TopicDisplayer());
         server.addServlet("POST", "/upload", confLoader);
-        server.addServlet("POST", "/generate-config", confLoader);
         server.addServlet("GET", "/app/", new HtmlLoader("html_files"));
         server.addServlet("GET", "/graph-data", confLoader);
+        server.addServlet("GET", "/docs/", new DocLoader());
 
         // Start the server
         server.start();

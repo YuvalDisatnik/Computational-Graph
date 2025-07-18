@@ -4,6 +4,19 @@ A modular, extensible simulation of a computational graph system using a publish
 
 ---
 
+## 📚 Javadoc Documentation
+
+Comprehensive Javadoc documentation is available for all major classes and packages in this project. You can find the generated HTML documentation in the `docs/` directory.
+
+**New!** You can now view the documentation directly through the running web server:
+
+- **Browse online:** [http://localhost:8080/docs/index.html](http://localhost:8080/docs/index.html)
+- Or, open `docs/index.html` in your browser manually.
+
+The `/docs/` endpoint serves all files from the `docs/` directory, making it easy to explore class references, package summaries, and detailed API information from any device on your network.
+
+---
+
 ## 🌟 Key Features
 
 - **Interactive Web Interface** – Modern, responsive UI for easy experimentation
@@ -142,6 +155,7 @@ FINAL_RESULT
 | Method | Endpoint   | Description              |
 | ------ | ---------- | ------------------------ |
 | `GET`  | `/app/*`   | Static file serving      |
+| `GET`  | `/docs/*`  | Javadoc documentation    |
 | `POST` | `/upload`  | Configuration upload     |
 | `POST` | `/publish` | Publish message to topic |
 
