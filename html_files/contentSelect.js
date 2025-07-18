@@ -100,7 +100,7 @@ function updateFramesContent(isDeployed = false) {
     }, 2000); // 2-second delay
   } else {
     // In undeployed state, show the initial placeholder pages
-    graphFrame.src = "graph.html";
+    graphFrame.src = "temp.html";
     outputFrame.src = "results.html";
   }
 }
