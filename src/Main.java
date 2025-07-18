@@ -9,6 +9,7 @@ import servlets.*;
  * 
  * The server runs on port 8080 by default and provides the following endpoints:
  * - GET /app/* - Static file serving for the web interface
+ * - GET /docs/* - Static file serving for the web interface
  * - POST /upload - Configuration file upload and processing
  * - POST /generate-config - AI-powered configuration generation
  * - GET /publish - Message publishing to topics
