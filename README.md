@@ -27,6 +27,18 @@ The `/docs/` endpoint serves all files from the `docs/` directory, making it eas
 
 ---
 
+## 🛠️ Prerequisites
+
+- **Java Development Kit (JDK) 22 or higher**
+  - Make sure you have Java 22 (or a compatible version) installed on your system.
+  - You can check your Java version by running:
+    ```bash
+    java -version
+    ```
+- **Git** (for cloning the repository)
+
+---
+
 ## 🚀 Quick Start
 
 1. **Clone and Navigate**
