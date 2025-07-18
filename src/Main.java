@@ -31,13 +31,13 @@ public class Main {
 
         // Start the server
         server.start();
-        System.out.println("🚀 Computational Graph Server is running!");
-        System.out.println("📱 Please navigate to: http://localhost:8080/app/index.html");
-        System.out.println("⏹️  Press Enter to stop the server...");
+        System.out.println("Computational Graph Server is running!");
+        System.out.println("Please navigate to: http://localhost:8080/app/index.html");
+        System.out.println("Press Enter to stop the server...");
         
         // Wait for user input to stop the server
         System.in.read();
         server.close();
-        System.out.println("✅ Server stopped successfully.");
+        System.out.println("Server stopped successfully.");
     }
 }

@@ -9,10 +9,14 @@ public class IncAgent implements Agent {
     private double x = 0;
     private final String[] subs;
     private final String[] pubs;
+    private int id;
+    private static int incCounter = 0;
 
     public IncAgent(String[] subs, String[] pubs){
         this.subs = subs;
         this.pubs = pubs;
+        this.id = incCounter;
+        incCounter++;
         if(subs.length >= 1){
             TopicManagerSingleton.get().getTopic(subs[0]).subscribe(this);
         }
@@ -45,7 +49,7 @@ public class IncAgent implements Agent {
 
     @Override
     public String getName() {
-        return "IncAgent";
+        return "IncAgent" + id;
     }
 
     @Override

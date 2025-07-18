@@ -3,6 +3,7 @@ package servlets;
 import graph.Message;
 import graph.Topic;
 import graph.TopicManagerSingleton;
+import graph.TopicManagerSingleton.TopicManager;
 import server.Servlet;
 import server.RequestParser.RequestInfo;
 
@@ -34,6 +35,9 @@ public class TopicDisplayer implements Servlet {
                 // Check for cycles in the graph
                 if(ConfLoader.getHasCycles()){
                     throw new IllegalStateException("Graph has cycles, can't process message");
+                }
+                if(!TopicManagerSingleton.get().topicExists(topic)){
+                    throw new IllegalArgumentException("Topic doesn't exist in the current graph");
                 }
                 System.out.println("Value before: " + TopicManagerSingleton.get().getTopic(topic).getLastMessage());
                 double msgValue = Double.parseDouble(message);

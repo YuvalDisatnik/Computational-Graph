@@ -1,266 +1,146 @@
 # Computational Graph Web Application
 
-A modular, extensible simulation of a computational graph system using a publisher/subscriber architecture. Developed as part of the Advanced Programming course, this project demonstrates modern software engineering practices, concurrent message-passing, and web-based visualization. The system is designed for educational purposes, allowing users to create, visualize, and interact with computational graphs in real time.
+A modular, extensible simulation of a computational graph system using a publisher/subscriber architecture. Designed for educational purposes, this project lets you create, visualize, and interact with computational graphs in real time.
 
-## 🧠 Background & Motivation
+---
 
-Computational graphs are widely used in data processing, machine learning, and distributed systems. This project models a computational graph as a set of agents (processing units) and topics (communication channels), using a publisher/subscriber pattern for message routing. The architecture is modular, supporting easy extension with new agent types and graph topologies. The web interface provides an accessible way to experiment with graph-based computation, configuration management, and real-time feedback.
+## 🌟 Key Features
 
-## 🌟 Features
+- **Interactive Web Interface** – Modern, responsive UI for easy experimentation
+- **Real-time Visualization** – The presented graph is fully interactive: you can move, scale, and explore nodes and edges dynamically
+- **Configuration Management** – Upload and manage computational graph configurations with instant validation
+- **Message Publishing** – Send messages to topics in real time and see immediate feedback
+- **Supported Math Operations** – Increment, Decrement, Addition, Subtraction, Multiplication, Division
 
-- **Interactive Web Interface** – Modern, responsive UI with iframe-based architecture and seamless state management
-- **Configuration Management** – Upload and manage computational graph configurations with real-time validation
-- **Real-time Visualization** – Dynamic graph rendering with Cytoscape.js and coordinated iframe updates
-- **Message Publishing** – Send messages to topics in real time with immediate feedback
-- **RESTful API** – Complete backend with servlet-based endpoints returning JSON responses
-- **Static File Serving** – Built-in web server for HTML/CSS/JS assets
-- **Robust Error Handling** – Comprehensive error reporting and troubleshooting guidance
-
-## 🏗️ Architecture
-
-### Backend Components
-
-- **HTTP Server** (`MyHTTPServer`) – Custom HTTP server implementation
-- **Servlet Framework** – Request routing and handling
-- **Graph Engine** – Publisher/subscriber computational graph system
-- **Configuration Parser** – Processes `.conf` files into executable graphs
-
-### Frontend Components
-
-- **Main Interface** (`index.html`) – Iframe-based layout with coordinated updates
-- **Configuration Panel** (`form.html`) – File upload and message publishing
-- **Graph Visualization** (`graph.html`/`graph_temp.html`/`generated_graph.html`) – Interactive graph display using Cytoscape.js
-- **Results Display** (`results.html`) – Real-time output and computation results
-- **Content Coordinator** (`contentSelect.js`) – Manages iframe communication and state synchronization
-
-> **Note:** All web interface files are located in the `html_files/` directory and are served via the `/app/` endpoint (e.g., `/app/index.html`).
-
-### Key Servlets
-
-- `ConfLoader` – Handles configuration uploads (`/upload`) with JSON response support
-- `TopicDisplayer` – Manages message publishing (`/publish`) with real-time feedback
-- `HtmlLoader` – Serves static web assets (`/app/`) with proper MIME type handling
-- `GraphDataServlet` – (if enabled) Provides graph data for visualization
+---
 
 ## 🚀 Quick Start
 
-### Prerequisites
-
-- Java 8 or higher
-- Web browser (Chrome, Firefox, Safari, Edge)
-
-### Installation & Running
-
 1. **Clone and Navigate**
-
    ```bash
    git clone <https://github.com/YuvalDisatnik/Computational-Graph.git>
    cd Computational-Graph
    ```
-
 2. **Compile the Project**
-
    ```bash
    javac -cp src src/Main.java src/servlets/*.java src/server/*.java src/graph/*.java src/configs/*.java src/views/*.java -d out
    ```
-
 3. **Start the Server**
-
    ```bash
    java -cp out Main
    ```
+4. **Open the App**
+   - Go to: [http://localhost:8080/app/index.html](http://localhost:8080/app/index.html)
 
-4. **Access the Application**
-   Open your browser and go to: `http://localhost:8080/app/index.html`
+---
 
-5. **Stop the Server**
-   Press `Enter` in the terminal or `Ctrl+C`
+## 📝 How to Use
 
-> **Troubleshooting:**
->
-> - If you change files in `html_files/`, clear your browser cache or do a hard refresh to see updates.
-> - If port 8080 is in use, edit the port in `Main.java` and recompile.
+### 1. Upload a Configuration
 
-## 📁 Project Structure
-
-```
-Computational-Graph/
-├── src/
-│   ├── Main.java                 # Application entry point
-│   ├── servlets/                 # HTTP request handlers (ConfLoader, TopicDisplayer, HtmlLoader, GraphDataServlet)
-│   ├── server/                   # HTTP server implementation (MyHTTPServer, RequestParser, Servlet)
-│   ├── graph/                    # Computational graph core (Agent, Topic, Message, ParallelAgent, TopicManagerSingleton)
-│   ├── configs/                  # Configuration management (Config, GenericConfig, Graph, Node, agent implementations)
-│   └── views/                    # Visualization components (HtmlGraphWriter)
-├── html_files/                   # Web frontend (index.html, form.html, graph.html, results.html, styles.css, *.js)
-├── config_files/                 # Sample configurations (simple.conf, cycle.conf)
-├── out/                          # Compiled Java classes
-└── README.md
-```
-
-- **src/** – All Java source code (backend, graph engine, servlets, config, visualization)
-- **html_files/** – All static web assets (served via `/app/`)
-- **config_files/** – Example configuration files for testing
-- **out/** – Compiled Java classes (output directory)
-
-## 📖 Usage Guide
-
-### 1. Upload Configuration
-
-- Click "Choose File" in the Configuration section
-- Select a `.conf` file (try `config_files/simple.conf`)
-- Click "Deploy" to activate the configuration
+- Go to the Configuration section
+- Select a `.conf` file (see format below)
+- Click "Deploy" to activate
 
 ### 2. Send Messages
 
-- Enter a topic name in the "Topic Name" field
-- Enter your message in the "Message" field
+- Enter a topic name and message
 - Click "Send" or press Enter
+- **Note:** The topic must already exist in the graph (i.e., be defined in your configuration file). You cannot send messages to topics that are not part of the current graph.
+- **Note:** The value you send must be valid for the intended mathematical operation (e.g., a number for arithmetic operations, and avoid invalid cases like division by zero).
 
-### 3. View Graph
+### 3. View & Interact with the Graph
 
-- The graph visualization updates automatically when configurations are deployed
-- Nodes represent agents and topics
-- Edges show data flow connections
+- The graph updates automatically when configurations are deployed
+- **You can move, zoom, and interact with nodes and edges** for better exploration
 
-## 🔌 API Endpoints
+---
 
-| Method | Endpoint           | Description                      | Request Content-Type | Response Content-Type                             |
-| ------ | ------------------ | -------------------------------- | -------------------- | ------------------------------------------------- |
-| `GET`  | `/app/*`           | Static file serving              | -                    | `text/html`, `text/css`, `application/javascript` |
-| `POST` | `/upload`          | Configuration file upload        | `text/plain`         | `application/json`                                |
-| `POST` | `/publish`         | Publish message to topic         | `application/json`   | `application/json`                                |
+## 📄 Configuration File Format
 
-### Example API Usage
+- Each agent requires **exactly 3 lines**:
+  1. Fully qualified class name (e.g., `configs.PlusAgent`)
+  2. Input topics (comma-separated)
+  3. Output topics (comma-separated)
+- **Important:** The configuration file must end with an empty line (a blank line at the end of the file).
 
-**Uploading Configuration:**
-
-```bash
-curl -X POST http://localhost:8080/upload \
-  -H "Content-Type: text/plain" \
-  --data-binary @config_files/simple.conf
-```
-
-**Publishing a Message:**
-
-```bash
-curl -X POST http://localhost:8080/publish \
-  -H "Content-Type: application/json" \
-  -d '{"topic": "INPUT1", "message": "42"}'
-```
-
-## 📝 Configuration File Format
-
-Configuration files define computational graphs using a simple text format:
+**Example:**
 
 ```
-# Agent class name
-test.PlusAgent
-# Subscribed topics (comma-separated)
+configs.PlusAgent
 A,B
-# Published topics (comma-separated)
 C
-
-test.IncAgent
+configs.IncAgent
 C
 RESULT
+
 ```
 
-Each agent requires exactly 3 lines:
+---
 
-1. Fully qualified class name
-2. Input topics (subscriptions)
-3. Output topics (publications)
+## ➕ Supported Math Operations
+
+- Increment
+- Decrement
+- Addition
+- Subtraction
+- Multiplication
+- Division
+
+Reference the corresponding agent classes in your configuration files (e.g., `configs.PlusAgent` for addition).
+
+---
 
 ## 🎯 Example Configurations
 
 **Simple Addition Pipeline:**
 
 ```
-test.PlusAgent
+configs.PlusAgent
 INPUT1,INPUT2
 SUM
-
-test.IncAgent
+configs.IncAgent
 SUM
 RESULT
+
 ```
 
 **Complex Processing Chain:**
 
 ```
-test.PlusAgent
+configs.PlusAgent
 A,B
 AB_SUM
-
-test.PlusAgent
+configs.PlusAgent
 C,D
 CD_SUM
-
-test.PlusAgent
+configs.PlusAgent
 AB_SUM,CD_SUM
 FINAL_RESULT
+
 ```
 
-## 🛠️ Development
+---
 
-### Building
+## 🔌 API Reference
 
-```bash
-# Compile all sources
-javac -cp src src/Main.java src/servlets/*.java src/server/*.java src/graph/*.java src/configs/*.java src/views/*.java -d out
+| Method | Endpoint   | Description              |
+| ------ | ---------- | ------------------------ |
+| `GET`  | `/app/*`   | Static file serving      |
+| `POST` | `/upload`  | Configuration upload     |
+| `POST` | `/publish` | Publish message to topic |
 
-# Run with custom port
-java -cp out -Dport=9090 Main
-```
+---
 
-### Adding New Agents
+## 🛠️ Troubleshooting
 
-1. Implement the `Agent` interface (see `src/graph/Agent.java`)
-2. Add your agent class to the classpath
-3. Reference it in configuration files
+- Ensure your `.conf` file has exactly 3 lines per agent and ends with an empty line
+- Use UTF-8 encoding for configuration files
+- If port 8080 is in use, edit the port in `Main.java` and recompile
+- **You can only send messages to topics that exist in the current graph.**
+- **The value you send must be valid for the operation (e.g., numbers for math, no division by zero, etc.).**
 
-### Debugging
-
-- Server logs appear in the console
-- Browser developer tools for frontend debugging
-- Check `config_files/` for uploaded configurations
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-**Issue: Page reloads/resets after clicking Deploy**
-
-- **Cause**: The deploy functionality now properly returns JSON responses instead of HTML pages.
-- **Solution**: Ensure you're using the latest version of the code.
-
-**Issue: Configuration upload fails**
-
-- **Cause**: Invalid configuration format or file encoding issues.
-- **Solution**:
-  - Ensure your `.conf` file has exactly 3 lines per agent (class name, subscriptions, publications)
-  - Use UTF-8 encoding for configuration files
-  - Check the console for validation error messages
-
-**Issue: Server won't start on port 8080**
-
-- **Cause**: Port already in use by another application.
-- **Solution**:
-  - Stop other applications using port 8080
-  - Or modify the port in `Main.java` and recompile
-
-**Issue: Graph visualization doesn't update**
-
-- **Cause**: Browser cache or JavaScript errors.
-- **Solution**:
-  - Clear browser cache or do a hard refresh
-  - Check browser developer console for errors
-  - Ensure all HTML files are served from the same domain
-
-## 📄 License
-
-This project is part of an Advanced Programming course assignment.
+---
 
 ## 👥 Authors
 
@@ -269,4 +149,6 @@ This project is part of an Advanced Programming course assignment.
 
 ---
 
-_For questions or issues, please check the source code documentation or create an issue in the repository._
+## 📄 License
+
+This project is part of an Advanced Programming course assignment.

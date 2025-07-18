@@ -37,9 +37,9 @@ public class RequestParser {
             String queryPart = uriWithQuery.substring(qMark + 1);
             for (String pair : queryPart.split("&")) {
                 String[] kv = pair.split("=", 2);
-                String k = URLDecoder.decode(kv[0], StandardCharsets.UTF_8);
+                String k = URLDecoder.decode(kv[0], StandardCharsets.UTF_8.name());
                 String v = kv.length == 2
-                        ? URLDecoder.decode(kv[1], StandardCharsets.UTF_8)
+                        ? URLDecoder.decode(kv[1], StandardCharsets.UTF_8.name())
                         : "";
                 params.put(k, v);
             }
@@ -84,7 +84,7 @@ public class RequestParser {
                 }
                 bodyBuilder.append(line).append("\n");
             }
-            content = bodyBuilder.toString().getBytes(StandardCharsets.UTF_8);
+            content = bodyBuilder.toString().getBytes(StandardCharsets.UTF_8.name());
         }
 
         //System.out.println("[RequestParser] Request parsed: " + httpCommand + " " + uriWithQuery + 

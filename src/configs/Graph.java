@@ -20,7 +20,6 @@ public class Graph extends ArrayList<Node>{
     }
 
     public void createFromTopics(){
-        
         TopicManager tm = TopicManagerSingleton.get();
         
         HashMap<String, Node> nodes = new HashMap<>();

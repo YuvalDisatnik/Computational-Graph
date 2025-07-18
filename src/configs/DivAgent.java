@@ -4,26 +4,26 @@ import graph.Agent;
 import graph.Message;
 import graph.TopicManagerSingleton;
 
-public class PlusAgent implements Agent {
+public class DivAgent implements Agent {
 
     private double x = 0;
     private double y = 0;
     private final String[] subs;
     private final String[] pubs;
     private int id;
-    private static int plusCounter = 0;
+    private static int divCounter = 0;
 
-    public PlusAgent(String[] subs, String[] pubs){
+    public DivAgent(String[] subs, String[] pubs){
         this.subs = subs;
         this.pubs = pubs;
-        this.id = plusCounter;
-        plusCounter++;
+        this.id = divCounter;
+        divCounter++;
         if(subs.length >= 2){
             TopicManagerSingleton.get().getTopic(subs[0]).subscribe(this);
             TopicManagerSingleton.get().getTopic(subs[1]).subscribe(this);
         }
         else{
-            throw new IllegalArgumentException("PlusAgent requires at least 2 subscriptions");
+            throw new IllegalArgumentException("DivAgent requires at least 2 subscriptions");
         }
 
         // Register as publisher for output topics
@@ -33,25 +33,36 @@ public class PlusAgent implements Agent {
     }
 
     private void updateX(Message msg){
-        x = msg.asDouble;
-        publishResult();
+        if(y != 0){
+            x = msg.asDouble;
+            publishResult();
+        }
+        else{
+            throw new IllegalArgumentException("Can't divide by 0");
+        }
     }
 
     private void updateY(Message msg){
-        y = msg.asDouble;
-        publishResult();
+        if(msg.asDouble != 0){
+            y = msg.asDouble;
+            publishResult();
+        }
+        else{
+            throw new IllegalArgumentException("Can't divide by 0");
+        }
     }
 
     private void publishResult(){
+        System.out.println("trying to do" + x + "/" + y);
         if(pubs.length > 0){
-            double result = x + y;
+            double result = x / y;
             TopicManagerSingleton.get().getTopic(pubs[0]).publish(new Message(result));
         }
     }
 
     @Override
     public String getName() {
-        return "PlusAgent" + id;
+        return "DivAgent" + id;
     }
 
     @Override

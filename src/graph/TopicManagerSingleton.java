@@ -30,6 +30,10 @@ public class TopicManagerSingleton {
 		public void clear() {
 			map.clear();
 		}
+
+		public boolean topicExists(String name){
+			return map.containsKey(name);
+		}
 	}
 
 }
